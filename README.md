@@ -39,6 +39,10 @@ bun run preview
 
 You can also use `bun run start` to run preview mode.
 
+## Screenshot
+
+![Nearby Bus Arrivals UI](docs/screenshots/bus-ui.jpeg)
+
 ## Project structure
 
 ```text
