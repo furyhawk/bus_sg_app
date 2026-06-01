@@ -1,0 +1,10 @@
+{
+  "name": "bus-sg-app",
+  "version": "1.0.0",
+  "private": true,
+  "description": "Singapore bus transport app powered by OpenAPI gateway",
+  "type": "commonjs",
+  "scripts": {
+    "start": "bun server.js"
+  }
+}
