@@ -11,7 +11,8 @@
   let loadingArrivals = false;
 
   let userLocation = null;
-  let nearestStop = null;
+  let selectedStop = null;
+  let nearbyStops = [];
   let locationMessage = "Allow location access to find your nearest bus stop.";
 
   let mapContainer;
@@ -20,6 +21,7 @@
   let userMarker;
   let stopMarker;
   let linkLine;
+  let nearbyStopMarkers = [];
 
   function setStatus(text, state = "") {
     statusText = text;
@@ -104,9 +106,9 @@
     return allStops;
   }
 
-  async function resolveNearestBusStop(position) {
+  async function resolveNearbyBusStops(position, limit = 8) {
     const stops = await loadAllBusStops();
-    let closest = null;
+    const candidates = [];
 
     stops.forEach((stop) => {
       const lat = parseCoordinate(stop.Latitude);
@@ -116,23 +118,21 @@
       }
 
       const distanceMeters = haversineMeters(position.lat, position.lon, lat, lon);
-      if (!closest || distanceMeters < closest.distanceMeters) {
-        closest = {
-          code: stop.BusStopCode,
-          description: stop.Description || "Unnamed stop",
-          roadName: stop.RoadName || "",
-          lat,
-          lon,
-          distanceMeters
-        };
-      }
+      candidates.push({
+        code: stop.BusStopCode,
+        description: stop.Description || "Unnamed stop",
+        roadName: stop.RoadName || "",
+        lat,
+        lon,
+        distanceMeters
+      });
     });
 
-    if (!closest) {
+    if (candidates.length === 0) {
       throw new Error("No valid bus stop coordinates were returned.");
     }
 
-    return closest;
+    return candidates.sort((a, b) => a.distanceMeters - b.distanceMeters).slice(0, limit);
   }
 
   function getBrowserPosition() {
@@ -188,9 +188,9 @@
       userMarker.bindPopup("You are here");
     }
 
-    if (nearestStop) {
-      const stopLatLng = [nearestStop.lat, nearestStop.lon];
-      const stopLabel = `${nearestStop.description} (${nearestStop.code})`;
+    if (selectedStop) {
+      const stopLatLng = [selectedStop.lat, selectedStop.lon];
+      const stopLabel = `${selectedStop.description} (${selectedStop.code})`;
       if (!stopMarker) {
         stopMarker = leaflet.marker(stopLatLng, { title: stopLabel }).addTo(map);
       } else {
@@ -199,10 +199,31 @@
       stopMarker.bindPopup(stopLabel);
     }
 
-    if (userLocation && nearestStop) {
+    nearbyStopMarkers.forEach((marker) => marker.remove());
+    nearbyStopMarkers = [];
+
+    nearbyStops.forEach((stop) => {
+      const marker = leaflet
+        .circleMarker([stop.lat, stop.lon], {
+          radius: selectedStop?.code === stop.code ? 8 : 5,
+          color: selectedStop?.code === stop.code ? "#d25f1f" : "#7f6a52",
+          fillColor: selectedStop?.code === stop.code ? "#d25f1f" : "#cbbca2",
+          fillOpacity: 0.85,
+          weight: 2
+        })
+        .addTo(map);
+
+      marker.bindPopup(`${stop.description} (${stop.code})`);
+      marker.on("click", () => {
+        selectBusStop(stop, true);
+      });
+      nearbyStopMarkers.push(marker);
+    });
+
+    if (userLocation && selectedStop) {
       const linePoints = [
         [userLocation.lat, userLocation.lon],
-        [nearestStop.lat, nearestStop.lon]
+        [selectedStop.lat, selectedStop.lon]
       ];
 
       if (!linkLine) {
@@ -254,16 +275,16 @@
   }
 
   async function runArrival() {
-    if (!nearestStop) {
+    if (!selectedStop) {
       await resolveLocationAndNearestStop(false);
-      if (!nearestStop) {
+      if (!selectedStop) {
         return;
       }
     }
 
     loadingArrivals = true;
     try {
-      await callArrivalEndpoint(nearestStop.code);
+      await callArrivalEndpoint(selectedStop.code);
       setStatus("Arrivals Loaded", "ok");
     } catch (error) {
       setStatus("Arrival Error", "error");
@@ -281,6 +302,15 @@
     }
   }
 
+  async function selectBusStop(stop, loadArrivals = false) {
+    selectedStop = stop;
+    locationMessage = `Selected stop: ${stop.description} (${stop.code})`;
+    await updateMap();
+    if (loadArrivals) {
+      await runArrival();
+    }
+  }
+
   async function resolveLocationAndNearestStop(loadArrivals = true) {
     locating = true;
     locationMessage = "Resolving your location...";
@@ -292,9 +322,13 @@
         lon: position.coords.longitude
       };
 
-      locationMessage = "Finding nearest bus stop...";
-      nearestStop = await resolveNearestBusStop(userLocation);
-      locationMessage = `Nearest stop: ${nearestStop.description} (${nearestStop.code})`;
+      locationMessage = "Finding nearby bus stops...";
+      nearbyStops = await resolveNearbyBusStops(userLocation);
+      selectedStop = nearbyStops[0] || null;
+      if (!selectedStop) {
+        throw new Error("No nearby bus stop found.");
+      }
+      locationMessage = `Nearest stop found: ${selectedStop.description} (${selectedStop.code}). You can choose another nearby stop below.`;
 
       await updateMap();
       setStatus("Location Ready", "ok");
@@ -356,17 +390,37 @@
 
     <div class="stop-meta">
       <div class="meta-item">
-        <span class="meta-label">Nearest stop</span>
-        <strong>{nearestStop ? `${nearestStop.code} - ${nearestStop.description}` : "Not resolved"}</strong>
+        <span class="meta-label">Selected stop</span>
+        <strong>{selectedStop ? `${selectedStop.code} - ${selectedStop.description}` : "Not resolved"}</strong>
       </div>
       <div class="meta-item">
         <span class="meta-label">Road</span>
-        <strong>{nearestStop?.roadName || "-"}</strong>
+        <strong>{selectedStop?.roadName || "-"}</strong>
       </div>
       <div class="meta-item">
         <span class="meta-label">Distance</span>
-        <strong>{nearestStop ? formatDistance(nearestStop.distanceMeters) : "-"}</strong>
+        <strong>{selectedStop ? formatDistance(selectedStop.distanceMeters) : "-"}</strong>
       </div>
+    </div>
+
+    <div class="nearby-stops">
+      <p class="meta-label">Nearby stops</p>
+      {#if nearbyStops.length > 0}
+        <div class="nearby-list">
+          {#each nearbyStops as stop}
+            <button
+              class={`stop-choice ${selectedStop?.code === stop.code ? "active" : ""}`}
+              type="button"
+              on:click={() => selectBusStop(stop, true)}
+            >
+              <span>{stop.code} - {stop.description}</span>
+              <small>{formatDistance(stop.distanceMeters)}</small>
+            </button>
+          {/each}
+        </div>
+      {:else}
+        <p class="hint">No nearby stops loaded yet.</p>
+      {/if}
     </div>
   </section>
 
