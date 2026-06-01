@@ -6,6 +6,11 @@ A lightweight bus transport web app that uses the gateway OpenAPI contract at:
 
 The frontend is built with SvelteKit. It dynamically loads transport endpoints from the OpenAPI spec and calls them through a SvelteKit server hook proxy.
 
+## Stack
+
+- SvelteKit + Vite + Svelte 5
+- Bun for package management and scripts
+
 ## Run
 
 1. Ensure your API gateway is running at http://localhost:8067.
@@ -34,6 +39,21 @@ bun run preview
 
 You can also use `bun run start` to run preview mode.
 
+## Project structure
+
+```text
+src/
+	app.css
+	app.html
+	hooks.server.js
+	routes/
+		+layout.svelte
+		+page.svelte
+svelte.config.js
+vite.config.js
+package.json
+```
+
 ## Features
 
 - Dynamic endpoint explorer built from OpenAPI paths under /api/v1/*
@@ -47,11 +67,14 @@ You can also use `bun run start` to run preview mode.
 
 Environment variables:
 
-- `PORT` (default: `3000`)
 - `API_ORIGIN` (default: `http://localhost:8067`)
 
 Example:
 
 ```bash
-API_ORIGIN=http://localhost:8067 PORT=3001 bun run dev -- --port 3001
+API_ORIGIN=http://localhost:8067 bun run dev -- --port 3001
 ```
+
+## Cleanup note
+
+Legacy files from the earlier custom Node static server version were removed.
