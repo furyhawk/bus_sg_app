@@ -99,6 +99,21 @@ h1 {
   margin-bottom: 0.65rem;
 }
 
+.arrivals-head-actions {
+  display: flex;
+  align-items: center;
+  gap: 0.45rem;
+}
+
+.sheet-grabber,
+.mobile-sheet-toggle {
+  display: none;
+}
+
+.sheet-content {
+  display: block;
+}
+
 label {
   display: flex;
   flex-direction: column;
@@ -423,6 +438,10 @@ button:hover {
 }
 
 @media (max-width: 760px) {
+  body {
+    padding-bottom: 16.5rem;
+  }
+
   .app-shell {
     width: min(1100px, calc(100% - 1rem));
     margin-top: 1rem;
@@ -457,6 +476,79 @@ button:hover {
 
   .panel {
     padding: 0.85rem;
+  }
+
+  .arrivals-panel {
+    position: fixed;
+    left: 0.5rem;
+    right: 0.5rem;
+    bottom: 0.5rem;
+    z-index: 14;
+    margin-top: 0;
+    border-radius: 18px;
+    background: rgba(255, 251, 243, 0.96);
+    box-shadow: 0 16px 36px rgba(54, 39, 12, 0.22);
+    max-height: min(68vh, 520px);
+    overflow: hidden;
+    transition: transform 220ms ease, max-height 220ms ease;
+  }
+
+  .sheet-grabber {
+    display: flex;
+    width: 100%;
+    justify-content: center;
+    align-items: center;
+    background: transparent;
+    padding: 0.1rem 0 0.45rem;
+    min-height: 20px;
+  }
+
+  .sheet-grabber span {
+    width: 44px;
+    height: 5px;
+    border-radius: 999px;
+    background: #cfbaa0;
+  }
+
+  .mobile-sheet-toggle {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    min-height: 34px;
+    border-radius: 10px;
+    background: #efe2ca;
+    color: #5a4734;
+    font-size: 0.83rem;
+    padding: 0.35rem 0.58rem;
+  }
+
+  .arrivals-panel .panel-header.compact {
+    margin-bottom: 0.45rem;
+  }
+
+  .arrivals-panel .sheet-content {
+    max-height: calc(min(68vh, 520px) - 92px);
+    overflow: auto;
+    padding-bottom: 0.25rem;
+  }
+
+  .arrivals-panel.sheet-collapsed {
+    max-height: 76px;
+  }
+
+  .arrivals-panel.sheet-collapsed .panel-header,
+  .arrivals-panel.sheet-collapsed .sheet-content {
+    opacity: 0;
+    pointer-events: none;
+  }
+
+  .arrivals-panel.sheet-collapsed .panel-header {
+    margin: 0;
+    min-height: 0;
+  }
+
+  .arrivals-panel.sheet-collapsed .sheet-grabber {
+    padding: 0.52rem 0;
   }
 
   .btn-accent,

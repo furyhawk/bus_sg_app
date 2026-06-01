@@ -10,6 +10,7 @@
   let serviceNo = "";
   let locating = false;
   let loadingArrivals = false;
+  let mobileSheetOpen = true;
 
   let userLocation = null;
   let selectedStop = null;
@@ -534,40 +535,57 @@
     </div>
   </section>
 
-  <section class="panel">
+  <section class="panel arrivals-panel" class:sheet-collapsed={!mobileSheetOpen}>
+    <button
+      class="sheet-grabber"
+      type="button"
+      aria-label={mobileSheetOpen ? "Collapse arrivals panel" : "Expand arrivals panel"}
+      aria-expanded={mobileSheetOpen}
+      on:click={() => (mobileSheetOpen = !mobileSheetOpen)}
+    >
+      <span></span>
+    </button>
+
     <div class="panel-header compact">
       <h2>Arrivals</h2>
-      <span class={`status-pill ${statusState}`}>{statusText}</span>
-    </div>
-
-    <div class="arrivals-actions">
-      <label>
-        Service filter (optional)
-        <input bind:value={serviceNo} placeholder="e.g. 14" />
-      </label>
-      <button class="btn-accent" type="button" on:click={runArrival} disabled={loadingArrivals || locating}>
-        {loadingArrivals ? "Loading..." : "Refresh Arrivals"}
-      </button>
-    </div>
-
-    {#if services.length > 0}
-      <div class="arrival-board">
-        {#each services as service}
-          <article class="arrival-card">
-            <h3>Service {service.ServiceNo || "?"}</h3>
-            <p class="arrival-line">Next: {minutesUntil(service?.NextBus?.EstimatedArrival)}</p>
-            <p class="arrival-line">Following: {minutesUntil(service?.NextBus2?.EstimatedArrival)}</p>
-            <p class="arrival-line">Third: {minutesUntil(service?.NextBus3?.EstimatedArrival)}</p>
-          </article>
-        {/each}
+      <div class="arrivals-head-actions">
+        <span class={`status-pill ${statusState}`}>{statusText}</span>
+        <button class="mobile-sheet-toggle" type="button" on:click={() => (mobileSheetOpen = !mobileSheetOpen)}>
+          {mobileSheetOpen ? "Hide" : "Show"}
+        </button>
       </div>
-    {:else}
-      <p class="hint">No arrivals loaded yet. Tap "Use Current Location" then "Refresh Arrivals".</p>
-    {/if}
+    </div>
 
-    <details class="raw-response">
-      <summary>Raw response</summary>
-      <pre class="response">{responseText}</pre>
-    </details>
+    <div class="sheet-content" aria-hidden={!mobileSheetOpen}>
+      <div class="arrivals-actions">
+        <label>
+          Service filter (optional)
+          <input bind:value={serviceNo} placeholder="e.g. 14" />
+        </label>
+        <button class="btn-accent" type="button" on:click={runArrival} disabled={loadingArrivals || locating}>
+          {loadingArrivals ? "Loading..." : "Refresh Arrivals"}
+        </button>
+      </div>
+
+      {#if services.length > 0}
+        <div class="arrival-board">
+          {#each services as service}
+            <article class="arrival-card">
+              <h3>Service {service.ServiceNo || "?"}</h3>
+              <p class="arrival-line">Next: {minutesUntil(service?.NextBus?.EstimatedArrival)}</p>
+              <p class="arrival-line">Following: {minutesUntil(service?.NextBus2?.EstimatedArrival)}</p>
+              <p class="arrival-line">Third: {minutesUntil(service?.NextBus3?.EstimatedArrival)}</p>
+            </article>
+          {/each}
+        </div>
+      {:else}
+        <p class="hint">No arrivals loaded yet. Tap "Use Current Location" then "Refresh Arrivals".</p>
+      {/if}
+
+      <details class="raw-response">
+        <summary>Raw response</summary>
+        <pre class="response">{responseText}</pre>
+      </details>
+    </div>
   </section>
 </main>
