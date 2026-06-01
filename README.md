@@ -58,7 +58,9 @@ package.json
 
 - Dynamic endpoint explorer built from OpenAPI paths under /api/v1/*
 - Bus-focused endpoint filtering (Bus and Passenger Volume tags)
-- Quick bus-arrival panel with BusStopCode and optional ServiceNo
+- Quick bus-arrival panel that uses your current location to resolve the nearest bus stop automatically
+- Map view for current location and nearest resolved bus stop
+- Optional ServiceNo filter for arrival checks
 - JSON response viewer
 - Arrival board card view when the response includes Services
 - Server-side proxying for `/api/*` and `/openapi.json`

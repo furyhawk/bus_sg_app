@@ -24,8 +24,16 @@
   let statusState = "";
   let services = [];
 
-  let busStopCode = "83139";
   let serviceNo = "";
+  let userLocation = null;
+  let nearestStop = null;
+  let locating = false;
+  let locationMessage = "Location not resolved yet.";
+  let mapContainer;
+  let map;
+  let mapLayer;
+  let userMarker;
+  let stopMarker;
 
   function getSelectedEndpoint() {
     return endpointOptions[selectedEndpointIndex] || endpointOptions[0];
@@ -34,6 +42,23 @@
   function setStatus(text, state = "") {
     statusText = text;
     statusState = state;
+  }
+
+  function parseCoordinate(value) {
+    const num = Number(value);
+    return Number.isFinite(num) ? num : null;
+  }
+
+  function haversineMeters(lat1, lon1, lat2, lon2) {
+    const toRadians = (degrees) => (degrees * Math.PI) / 180;
+    const earthRadius = 6371000;
+    const dLat = toRadians(lat2 - lat1);
+    const dLon = toRadians(lon2 - lon1);
+    const a =
+      Math.sin(dLat / 2) * Math.sin(dLat / 2) +
+      Math.cos(toRadians(lat1)) * Math.cos(toRadians(lat2)) * Math.sin(dLon / 2) * Math.sin(dLon / 2);
+    const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
+    return earthRadius * c;
   }
 
   function titleizePath(path) {
@@ -84,6 +109,181 @@
       }
     } catch {
       // Keep fallback endpoint options when OpenAPI loading fails.
+    }
+  }
+
+  async function loadAllBusStops() {
+    const allStops = [];
+    const pageSize = 500;
+    let skip = 0;
+
+    while (true) {
+      const search = new URLSearchParams({ $top: String(pageSize), $skip: String(skip) });
+      const response = await fetch(`/api/v1/bus-stops?${search.toString()}`);
+      if (!response.ok) {
+        throw new Error(`Unable to load bus stops (${response.status})`);
+      }
+
+      const payload = await response.json();
+      let chunk = [];
+      if (Array.isArray(payload?.value)) {
+        chunk = payload.value;
+      } else if (Array.isArray(payload?.items)) {
+        chunk = payload.items;
+      } else if (Array.isArray(payload)) {
+        chunk = payload;
+      }
+      allStops.push(...chunk);
+
+      if (chunk.length < pageSize) {
+        break;
+      }
+
+      skip += pageSize;
+      if (skip > 15000) {
+        break;
+      }
+    }
+
+    return allStops;
+  }
+
+  async function resolveNearestBusStop(position) {
+    const stops = await loadAllBusStops();
+    let closest = null;
+
+    stops.forEach((stop) => {
+      const lat = parseCoordinate(stop.Latitude);
+      const lon = parseCoordinate(stop.Longitude);
+      if (lat === null || lon === null) {
+        return;
+      }
+
+      const distanceMeters = haversineMeters(position.lat, position.lon, lat, lon);
+      if (!closest || distanceMeters < closest.distanceMeters) {
+        closest = {
+          code: stop.BusStopCode,
+          description: stop.Description || "Unnamed stop",
+          roadName: stop.RoadName || "",
+          lat,
+          lon,
+          distanceMeters
+        };
+      }
+    });
+
+    if (!closest) {
+      throw new Error("No valid bus stop coordinates were returned.");
+    }
+
+    return closest;
+  }
+
+  function ensureMapLayer(leaflet) {
+    if (mapLayer) {
+      return;
+    }
+
+    mapLayer = leaflet.tileLayer("https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png", {
+      maxZoom: 19,
+      attribution: "&copy; OpenStreetMap contributors"
+    });
+    mapLayer.addTo(map);
+  }
+
+  async function updateMap() {
+    if (!mapContainer) {
+      return;
+    }
+
+    const leaflet = await import("leaflet");
+
+    if (!map) {
+      map = leaflet.map(mapContainer, {
+        zoomControl: true,
+        scrollWheelZoom: true
+      });
+    }
+
+    ensureMapLayer(leaflet);
+
+    if (userLocation) {
+      const userLatLng = [userLocation.lat, userLocation.lon];
+      if (!userMarker) {
+        userMarker = leaflet.marker(userLatLng, { title: "Your location" }).addTo(map);
+      } else {
+        userMarker.setLatLng(userLatLng);
+      }
+      userMarker.bindPopup("You are here");
+    }
+
+    if (nearestStop) {
+      const stopLatLng = [nearestStop.lat, nearestStop.lon];
+      const label = `${nearestStop.description} (${nearestStop.code})`;
+      if (!stopMarker) {
+        stopMarker = leaflet.marker(stopLatLng, { title: label }).addTo(map);
+      } else {
+        stopMarker.setLatLng(stopLatLng);
+      }
+      stopMarker.bindPopup(label);
+    }
+
+    if (userLocation && nearestStop) {
+      const bounds = leaflet.latLngBounds(
+        [userLocation.lat, userLocation.lon],
+        [nearestStop.lat, nearestStop.lon]
+      );
+      map.fitBounds(bounds, { padding: [30, 30], maxZoom: 17 });
+      return;
+    }
+
+    if (userLocation) {
+      map.setView([userLocation.lat, userLocation.lon], 16);
+      return;
+    }
+
+    map.setView([1.3521, 103.8198], 11);
+  }
+
+  function getBrowserPosition() {
+    return new Promise((resolve, reject) => {
+      if (!navigator.geolocation) {
+        reject(new Error("Geolocation is not supported in this browser."));
+        return;
+      }
+
+      navigator.geolocation.getCurrentPosition(resolve, reject, {
+        enableHighAccuracy: true,
+        timeout: 10000,
+        maximumAge: 60000
+      });
+    });
+  }
+
+  async function resolveLocationAndNearestStop() {
+    locating = true;
+    locationMessage = "Resolving your location...";
+
+    try {
+      const position = await getBrowserPosition();
+      userLocation = {
+        lat: position.coords.latitude,
+        lon: position.coords.longitude
+      };
+
+      locationMessage = "Finding nearest bus stop...";
+      nearestStop = await resolveNearestBusStop(userLocation);
+      locationMessage = `Nearest stop: ${nearestStop.description} (${nearestStop.code}), ${Math.round(
+        nearestStop.distanceMeters
+      )}m away`;
+      setStatus("Location Ready", "ok");
+      await updateMap();
+    } catch (error) {
+      const message = error?.message || "Unable to resolve current location.";
+      locationMessage = message;
+      setStatus("Location Error", "error");
+    } finally {
+      locating = false;
     }
   }
 
@@ -197,14 +397,16 @@
   }
 
   async function runArrival() {
-    if (!busStopCode.trim()) {
-      responseText = JSON.stringify({ error: "BusStopCode is required for arrival checks." }, null, 2);
-      setStatus("Missing BusStopCode", "error");
-      return;
+    if (!nearestStop) {
+      await resolveLocationAndNearestStop();
+      if (!nearestStop) {
+        responseText = JSON.stringify({ error: "Unable to resolve nearest bus stop." }, null, 2);
+        return;
+      }
     }
 
     const search = new URLSearchParams();
-    search.append("BusStopCode", busStopCode.trim());
+    search.append("BusStopCode", nearestStop.code);
     if (serviceNo.trim()) {
       search.append("ServiceNo", serviceNo.trim());
     }
@@ -222,11 +424,19 @@
     selectedEndpointIndex = 0;
     method = getSelectedEndpoint().method;
     seedDefaultParams();
+    await updateMap();
+    await resolveLocationAndNearestStop();
   });
 </script>
 
 <svelte:head>
   <title>Bus SG Control Deck</title>
+  <link
+    rel="stylesheet"
+    href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"
+    integrity="sha256-p4NxAoJBhIIN+hmNHrzRCf9tD/miZyoHS5obTRR9BMY="
+    crossorigin=""
+  />
 </svelte:head>
 
 <div class="bg-grid"></div>
@@ -294,10 +504,20 @@
       <h2>Quick Arrival Check</h2>
       <button class="btn-accent" type="button" on:click={runArrival}>Get Arrivals</button>
     </div>
+
+    <div class="location-head">
+      <p class="hint">{locationMessage}</p>
+      <button class="btn-ghost" type="button" on:click={resolveLocationAndNearestStop} disabled={locating}>
+        {locating ? "Locating..." : "Refresh Location"}
+      </button>
+    </div>
+
+    <div class="map-panel" bind:this={mapContainer}></div>
+
     <div class="grid-two">
       <label>
-        Bus Stop Code
-        <input bind:value={busStopCode} placeholder="e.g. 83139" />
+        Resolved Bus Stop
+        <input value={nearestStop ? `${nearestStop.code} - ${nearestStop.description}` : "Not resolved"} readonly />
       </label>
       <label>
         Service No (optional)

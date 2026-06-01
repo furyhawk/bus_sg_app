@@ -179,6 +179,27 @@ button:hover {
   font-size: 0.86rem;
 }
 
+.location-head {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 0.7rem;
+  margin-bottom: 0.7rem;
+}
+
+.location-head .hint {
+  margin: 0;
+}
+
+.map-panel {
+  width: 100%;
+  height: 280px;
+  border: 1px solid var(--line);
+  border-radius: 14px;
+  overflow: hidden;
+  margin-bottom: 0.8rem;
+}
+
 .status-pill {
   font-size: 0.8rem;
   padding: 0.28rem 0.55rem;
@@ -264,5 +285,10 @@ button:hover {
 
   .panel-header {
     flex-wrap: wrap;
+  }
+
+  .location-head {
+    flex-direction: column;
+    align-items: flex-start;
   }
 }
