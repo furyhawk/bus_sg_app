@@ -5,6 +5,7 @@
   let statusState = "";
   let responseText = "No request yet.";
   let services = [];
+  let arrivalsStopCode = "";
 
   let serviceNo = "";
   let locating = false;
@@ -22,6 +23,7 @@
   let stopMarker;
   let linkLine;
   let nearbyStopMarkers = [];
+  let isMapClickPicking = false;
 
   function setStatus(text, state = "") {
     statusText = text;
@@ -70,6 +72,33 @@
     const deltaMs = target.getTime() - Date.now();
     const mins = Math.max(0, Math.round(deltaMs / 60000));
     return `${mins} min`;
+  }
+
+  function escapeHtml(value) {
+    return String(value || "")
+      .replaceAll("&", "&amp;")
+      .replaceAll("<", "&lt;")
+      .replaceAll(">", "&gt;")
+      .replaceAll('"', "&quot;")
+      .replaceAll("'", "&#39;");
+  }
+
+  function buildStopPopup(stop) {
+    const title = `${stop.description} (${stop.code})`;
+    if (arrivalsStopCode !== stop.code || services.length === 0) {
+      return `<strong>${escapeHtml(title)}</strong>`;
+    }
+
+    const topServices = services.slice(0, 3);
+    const lines = topServices
+      .map((service) => {
+        const serviceCode = service?.ServiceNo || "?";
+        const eta = minutesUntil(service?.NextBus?.EstimatedArrival);
+        return `<li>${escapeHtml(serviceCode)}: ${escapeHtml(eta)}</li>`;
+      })
+      .join("");
+
+    return `<div><strong>${escapeHtml(title)}</strong><br /><small>Live arrivals</small><ul style=\"margin:.35rem 0 0 1rem;padding:0\">${lines}</ul></div>`;
   }
 
   async function loadAllBusStops() {
@@ -174,6 +203,27 @@
         zoomControl: true,
         scrollWheelZoom: true
       });
+
+      map.on("click", async (event) => {
+        if (isMapClickPicking) {
+          return;
+        }
+
+        isMapClickPicking = true;
+        locating = true;
+        locationMessage = "Map point selected. Finding nearby bus stops...";
+
+        try {
+          userLocation = {
+            lat: event.latlng.lat,
+            lon: event.latlng.lng
+          };
+          await resolveNearbyFromCurrentPoint(true);
+        } finally {
+          locating = false;
+          isMapClickPicking = false;
+        }
+      });
     }
 
     ensureMapLayer(leaflet);
@@ -196,7 +246,7 @@
       } else {
         stopMarker.setLatLng(stopLatLng);
       }
-      stopMarker.bindPopup(stopLabel);
+      stopMarker.bindPopup(buildStopPopup(selectedStop));
     }
 
     nearbyStopMarkers.forEach((marker) => marker.remove());
@@ -213,7 +263,7 @@
         })
         .addTo(map);
 
-      marker.bindPopup(`${stop.description} (${stop.code})`);
+      marker.bindPopup(buildStopPopup(stop));
       marker.on("click", () => {
         selectBusStop(stop, true);
       });
@@ -272,6 +322,8 @@
     if (!response.ok) {
       throw new Error(`Arrival request failed (${response.status})`);
     }
+
+    arrivalsStopCode = busStopCode;
   }
 
   async function runArrival() {
@@ -297,8 +349,10 @@
         2
       );
       services = [];
+      arrivalsStopCode = "";
     } finally {
       loadingArrivals = false;
+      await updateMap();
     }
   }
 
@@ -306,6 +360,22 @@
     selectedStop = stop;
     locationMessage = `Selected stop: ${stop.description} (${stop.code})`;
     await updateMap();
+    if (loadArrivals) {
+      await runArrival();
+    }
+  }
+
+  async function resolveNearbyFromCurrentPoint(loadArrivals = true) {
+    nearbyStops = await resolveNearbyBusStops(userLocation);
+    selectedStop = nearbyStops[0] || null;
+    if (!selectedStop) {
+      throw new Error("No nearby bus stop found.");
+    }
+
+    locationMessage = `Nearest stop found: ${selectedStop.description} (${selectedStop.code}). Tap another stop in the list or map.`;
+    await updateMap();
+    setStatus("Location Ready", "ok");
+
     if (loadArrivals) {
       await runArrival();
     }
@@ -323,19 +393,7 @@
       };
 
       locationMessage = "Finding nearby bus stops...";
-      nearbyStops = await resolveNearbyBusStops(userLocation);
-      selectedStop = nearbyStops[0] || null;
-      if (!selectedStop) {
-        throw new Error("No nearby bus stop found.");
-      }
-      locationMessage = `Nearest stop found: ${selectedStop.description} (${selectedStop.code}). You can choose another nearby stop below.`;
-
-      await updateMap();
-      setStatus("Location Ready", "ok");
-
-      if (loadArrivals) {
-        await runArrival();
-      }
+      await resolveNearbyFromCurrentPoint(loadArrivals);
     } catch (error) {
       locationMessage = error?.message || "Unable to resolve current location.";
       setStatus("Location Error", "error");
@@ -385,6 +443,8 @@
         {locating ? "Locating..." : "Use Current Location"}
       </button>
     </div>
+
+    <p class="map-hint">Tip: tap anywhere on the map to check the nearest stop and refresh arrivals around that point.</p>
 
     <div class="map-panel" bind:this={mapContainer}></div>
 

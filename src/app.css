@@ -175,6 +175,12 @@ button:hover {
   margin-bottom: 0.8rem;
 }
 
+.map-hint {
+  margin: 0 0 0.8rem;
+  color: var(--ink-soft);
+  font-size: 0.86rem;
+}
+
 .stop-meta {
   display: grid;
   grid-template-columns: repeat(3, minmax(0, 1fr));
@@ -217,7 +223,8 @@ button:hover {
   border: 1px solid #d7c3a6;
   background: #fff8ea;
   color: #3f3325;
-  padding: 0.55rem 0.7rem;
+  padding: 0.62rem 0.72rem;
+  min-height: 48px;
 }
 
 .stop-choice small {
@@ -332,6 +339,7 @@ button:hover {
   .app-shell {
     width: min(1100px, calc(100% - 1rem));
     margin-top: 1rem;
+    margin-bottom: 2rem;
   }
 
   .stop-meta,
@@ -350,6 +358,15 @@ button:hover {
   }
 
   .map-panel {
-    height: 300px;
+    height: min(50vh, 340px);
+  }
+
+  .panel {
+    padding: 0.85rem;
+  }
+
+  .btn-accent,
+  .btn-ghost {
+    min-height: 44px;
   }
 }

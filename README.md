@@ -109,6 +109,7 @@ package.json
 - Bus-focused endpoint filtering (Bus and Passenger Volume tags)
 - Quick bus-arrival panel that uses your current location to resolve the nearest bus stop automatically
 - Map view for current location and nearest resolved bus stop
+- Tap-to-query map interaction: tap any point on the map to resolve nearest stops and load arrivals for that area
 - Optional ServiceNo filter for arrival checks
 - JSON response viewer
 - Arrival board card view when the response includes Services
