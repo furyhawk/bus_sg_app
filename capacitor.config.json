@@ -1,0 +1,9 @@
+{
+  "appId": "com.bussg.app",
+  "appName": "Bus SG App",
+  "webDir": "build",
+  "bundledWebRuntime": false,
+  "server": {
+    "androidScheme": "https"
+  }
+}

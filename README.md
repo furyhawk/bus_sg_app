@@ -39,6 +39,41 @@ bun run preview
 
 You can also use `bun run start` to run preview mode.
 
+## Capacitor Mobile Targets
+
+This project is now configured with Capacitor for native mobile targets.
+
+### Included platforms
+
+- Android project in `android/`
+- iOS project in `ios/`
+
+### Build and sync web assets to mobile
+
+```bash
+bun run mobile:build
+```
+
+### Sync only (after web changes)
+
+```bash
+bun run cap:sync
+```
+
+### Open native projects
+
+```bash
+bun run cap:open:android
+bun run cap:open:ios
+```
+
+### One-time add platform commands (already done in this repo)
+
+```bash
+bunx cap add android
+bunx cap add ios
+```
+
 ## Containerized run (Docker and Podman)
 
 This project includes:
