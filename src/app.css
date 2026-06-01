@@ -95,10 +95,8 @@ h1 {
   margin-bottom: 0.85rem;
 }
 
-.grid-two {
-  display: grid;
-  grid-template-columns: repeat(2, minmax(0, 1fr));
-  gap: 0.8rem;
+.panel-header.compact {
+  margin-bottom: 0.65rem;
 }
 
 label {
@@ -151,29 +149,6 @@ button:hover {
   color: #3a3024;
 }
 
-.params-head {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  margin: 0.9rem 0 0.5rem;
-}
-
-.params-list {
-  display: grid;
-  gap: 0.55rem;
-}
-
-.param-row {
-  display: grid;
-  grid-template-columns: 1fr 1fr auto;
-  gap: 0.55rem;
-}
-
-.remove-param {
-  background: #efe0d2;
-  color: #552f19;
-}
-
 .hint {
   color: var(--ink-soft);
   font-size: 0.86rem;
@@ -193,10 +168,40 @@ button:hover {
 
 .map-panel {
   width: 100%;
-  height: 280px;
+  height: 360px;
   border: 1px solid var(--line);
   border-radius: 14px;
   overflow: hidden;
+  margin-bottom: 0.8rem;
+}
+
+.stop-meta {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 0.7rem;
+}
+
+.meta-item {
+  background: #fff8ea;
+  border: 1px solid #d9c6a8;
+  border-radius: 12px;
+  padding: 0.65rem 0.75rem;
+}
+
+.meta-label {
+  display: block;
+  font-size: 0.75rem;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  color: #846950;
+  margin-bottom: 0.2rem;
+}
+
+.arrivals-actions {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  gap: 0.7rem;
+  align-items: end;
   margin-bottom: 0.8rem;
 }
 
@@ -237,6 +242,11 @@ button:hover {
   font-size: 1.15rem;
 }
 
+.arrival-card h3 {
+  margin: 0;
+  font-size: 1.15rem;
+}
+
 .arrival-line {
   margin-top: 0.35rem;
   font-size: 0.9rem;
@@ -254,6 +264,17 @@ button:hover {
   overflow: auto;
   font-size: 0.84rem;
   line-height: 1.45;
+}
+
+.raw-response {
+  margin-top: 0.8rem;
+}
+
+.raw-response summary {
+  cursor: pointer;
+  color: #4d4032;
+  font-weight: 500;
+  margin-bottom: 0.5rem;
 }
 
 .hidden {
@@ -278,8 +299,8 @@ button:hover {
     margin-top: 1rem;
   }
 
-  .grid-two,
-  .param-row {
+  .stop-meta,
+  .arrivals-actions {
     grid-template-columns: 1fr;
   }
 
@@ -290,5 +311,9 @@ button:hover {
   .location-head {
     flex-direction: column;
     align-items: flex-start;
+  }
+
+  .map-panel {
+    height: 300px;
   }
 }

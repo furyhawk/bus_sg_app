@@ -1,43 +1,25 @@
 <script>
-  import { onMount } from "svelte";
+  import { onDestroy, onMount } from "svelte";
 
-  const fallbackEndpointOptions = [
-    { label: "Bus Arrivals", path: "/api/v1/bus-arrival", method: "GET" },
-    { label: "Bus Services", path: "/api/v1/bus-services", method: "GET" },
-    { label: "Bus Routes", path: "/api/v1/bus-routes", method: "GET" },
-    { label: "Bus Stops", path: "/api/v1/bus-stops", method: "GET" },
-    { label: "Planned Bus Routes", path: "/api/v1/planned-bus-routes", method: "GET" },
-    { label: "Passenger Volume (Bus)", path: "/api/v1/passenger-volume/bus", method: "GET" },
-    {
-      label: "Passenger Volume (OD Bus)",
-      path: "/api/v1/passenger-volume/od-bus",
-      method: "GET"
-    }
-  ];
-
-  let endpointOptions = [...fallbackEndpointOptions];
-  let selectedEndpointIndex = 0;
-  let method = "GET";
-  let params = [];
-  let responseText = "No request yet.";
   let statusText = "Idle";
   let statusState = "";
+  let responseText = "No request yet.";
   let services = [];
 
   let serviceNo = "";
+  let locating = false;
+  let loadingArrivals = false;
+
   let userLocation = null;
   let nearestStop = null;
-  let locating = false;
-  let locationMessage = "Location not resolved yet.";
+  let locationMessage = "Allow location access to find your nearest bus stop.";
+
   let mapContainer;
   let map;
   let mapLayer;
   let userMarker;
   let stopMarker;
-
-  function getSelectedEndpoint() {
-    return endpointOptions[selectedEndpointIndex] || endpointOptions[0];
-  }
+  let linkLine;
 
   function setStatus(text, state = "") {
     statusText = text;
@@ -61,55 +43,31 @@
     return earthRadius * c;
   }
 
-  function titleizePath(path) {
-    return path
-      .replace("/api/v1/", "")
-      .split("/")
-      .map((part) => part.replace(/-/g, " "))
-      .map((word) => word.charAt(0).toUpperCase() + word.slice(1))
-      .join(" - ");
+  function formatDistance(meters) {
+    if (!Number.isFinite(meters)) {
+      return "n/a";
+    }
+
+    if (meters >= 1000) {
+      return `${(meters / 1000).toFixed(2)} km`;
+    }
+
+    return `${Math.round(meters)} m`;
   }
 
-  async function loadOpenApiEndpoints() {
-    try {
-      const response = await fetch("/openapi.json");
-      if (!response.ok) {
-        return;
-      }
-
-      const spec = await response.json();
-      const paths = spec && spec.paths ? spec.paths : {};
-      const discovered = [];
-
-      Object.entries(paths).forEach(([path, methods]) => {
-        if (!path.startsWith("/api/v1/")) {
-          return;
-        }
-
-        const getMethod = methods && methods.get;
-        if (!getMethod) {
-          return;
-        }
-
-        const tags = Array.isArray(getMethod.tags) ? getMethod.tags.join(" ").toLowerCase() : "";
-        const include = tags.includes("bus") || tags.includes("passenger") || path.includes("bus");
-        if (!include) {
-          return;
-        }
-
-        discovered.push({
-          label: getMethod.summary || titleizePath(path),
-          path,
-          method: "GET"
-        });
-      });
-
-      if (discovered.length > 0) {
-        endpointOptions = discovered.sort((a, b) => a.path.localeCompare(b.path));
-      }
-    } catch {
-      // Keep fallback endpoint options when OpenAPI loading fails.
+  function minutesUntil(isoValue) {
+    if (!isoValue) {
+      return "n/a";
     }
+
+    const target = new Date(isoValue);
+    if (Number.isNaN(target.getTime())) {
+      return "n/a";
+    }
+
+    const deltaMs = target.getTime() - Date.now();
+    const mins = Math.max(0, Math.round(deltaMs / 60000));
+    return `${mins} min`;
   }
 
   async function loadAllBusStops() {
@@ -118,8 +76,8 @@
     let skip = 0;
 
     while (true) {
-      const search = new URLSearchParams({ $top: String(pageSize), $skip: String(skip) });
-      const response = await fetch(`/api/v1/bus-stops?${search.toString()}`);
+      const query = new URLSearchParams({ $top: String(pageSize), $skip: String(skip) });
+      const response = await fetch(`/api/v1/bus-stops?${query.toString()}`);
       if (!response.ok) {
         throw new Error(`Unable to load bus stops (${response.status})`);
       }
@@ -133,16 +91,14 @@
       } else if (Array.isArray(payload)) {
         chunk = payload;
       }
+
       allStops.push(...chunk);
 
-      if (chunk.length < pageSize) {
+      if (chunk.length < pageSize || skip > 15000) {
         break;
       }
 
       skip += pageSize;
-      if (skip > 15000) {
-        break;
-      }
     }
 
     return allStops;
@@ -177,6 +133,21 @@
     }
 
     return closest;
+  }
+
+  function getBrowserPosition() {
+    return new Promise((resolve, reject) => {
+      if (!navigator.geolocation) {
+        reject(new Error("Geolocation is not supported in this browser."));
+        return;
+      }
+
+      navigator.geolocation.getCurrentPosition(resolve, reject, {
+        enableHighAccuracy: true,
+        timeout: 10000,
+        maximumAge: 60000
+      });
+    });
   }
 
   function ensureMapLayer(leaflet) {
@@ -219,20 +190,28 @@
 
     if (nearestStop) {
       const stopLatLng = [nearestStop.lat, nearestStop.lon];
-      const label = `${nearestStop.description} (${nearestStop.code})`;
+      const stopLabel = `${nearestStop.description} (${nearestStop.code})`;
       if (!stopMarker) {
-        stopMarker = leaflet.marker(stopLatLng, { title: label }).addTo(map);
+        stopMarker = leaflet.marker(stopLatLng, { title: stopLabel }).addTo(map);
       } else {
         stopMarker.setLatLng(stopLatLng);
       }
-      stopMarker.bindPopup(label);
+      stopMarker.bindPopup(stopLabel);
     }
 
     if (userLocation && nearestStop) {
-      const bounds = leaflet.latLngBounds(
+      const linePoints = [
         [userLocation.lat, userLocation.lon],
         [nearestStop.lat, nearestStop.lon]
-      );
+      ];
+
+      if (!linkLine) {
+        linkLine = leaflet.polyline(linePoints, { color: "#d25f1f", weight: 3, dashArray: "6 8" }).addTo(map);
+      } else {
+        linkLine.setLatLngs(linePoints);
+      }
+
+      const bounds = leaflet.latLngBounds(linePoints);
       map.fitBounds(bounds, { padding: [30, 30], maxZoom: 17 });
       return;
     }
@@ -245,22 +224,64 @@
     map.setView([1.3521, 103.8198], 11);
   }
 
-  function getBrowserPosition() {
-    return new Promise((resolve, reject) => {
-      if (!navigator.geolocation) {
-        reject(new Error("Geolocation is not supported in this browser."));
-        return;
-      }
+  async function callArrivalEndpoint(busStopCode) {
+    const query = new URLSearchParams();
+    query.append("BusStopCode", busStopCode);
+    if (serviceNo.trim()) {
+      query.append("ServiceNo", serviceNo.trim());
+    }
 
-      navigator.geolocation.getCurrentPosition(resolve, reject, {
-        enableHighAccuracy: true,
-        timeout: 10000,
-        maximumAge: 60000
-      });
-    });
+    setStatus("Loading", "");
+    responseText = "Loading...";
+
+    const url = `/api/v1/bus-arrival?${query.toString()}`;
+    const response = await fetch(url);
+    const text = await response.text();
+
+    let payload;
+    try {
+      payload = JSON.parse(text);
+    } catch {
+      payload = { raw: text };
+    }
+
+    responseText = JSON.stringify(payload, null, 2);
+    services = Array.isArray(payload?.Services) ? payload.Services.slice(0, 12) : [];
+
+    if (!response.ok) {
+      throw new Error(`Arrival request failed (${response.status})`);
+    }
   }
 
-  async function resolveLocationAndNearestStop() {
+  async function runArrival() {
+    if (!nearestStop) {
+      await resolveLocationAndNearestStop(false);
+      if (!nearestStop) {
+        return;
+      }
+    }
+
+    loadingArrivals = true;
+    try {
+      await callArrivalEndpoint(nearestStop.code);
+      setStatus("Arrivals Loaded", "ok");
+    } catch (error) {
+      setStatus("Arrival Error", "error");
+      responseText = JSON.stringify(
+        {
+          error: "Request failed",
+          message: error?.message || "Unknown error"
+        },
+        null,
+        2
+      );
+      services = [];
+    } finally {
+      loadingArrivals = false;
+    }
+  }
+
+  async function resolveLocationAndNearestStop(loadArrivals = true) {
     locating = true;
     locationMessage = "Resolving your location...";
 
@@ -273,164 +294,37 @@
 
       locationMessage = "Finding nearest bus stop...";
       nearestStop = await resolveNearestBusStop(userLocation);
-      locationMessage = `Nearest stop: ${nearestStop.description} (${nearestStop.code}), ${Math.round(
-        nearestStop.distanceMeters
-      )}m away`;
-      setStatus("Location Ready", "ok");
+      locationMessage = `Nearest stop: ${nearestStop.description} (${nearestStop.code})`;
+
       await updateMap();
+      setStatus("Location Ready", "ok");
+
+      if (loadArrivals) {
+        await runArrival();
+      }
     } catch (error) {
-      const message = error?.message || "Unable to resolve current location.";
-      locationMessage = message;
+      locationMessage = error?.message || "Unable to resolve current location.";
       setStatus("Location Error", "error");
     } finally {
       locating = false;
     }
   }
 
-  function seedDefaultParams() {
-    const selected = getSelectedEndpoint();
-
-    if (selected.path === "/api/v1/bus-arrival") {
-      params = [
-        { key: "BusStopCode", value: "83139" },
-        { key: "ServiceNo", value: "" }
-      ];
-      return;
-    }
-
-    params = [
-      { key: "$skip", value: "0" },
-      { key: "$top", value: "10" }
-    ];
-  }
-
-  function addParamRow() {
-    params = [...params, { key: "", value: "" }];
-  }
-
-  function removeParamRow(index) {
-    params = params.filter((_, i) => i !== index);
-  }
-
-  function updateParam(index, field, value) {
-    params = params.map((param, i) => {
-      if (i !== index) {
-        return param;
-      }
-
-      return { ...param, [field]: value };
-    });
-  }
-
-  function collectParams() {
-    const search = new URLSearchParams();
-
-    params.forEach((param) => {
-      const key = param.key.trim();
-      const value = param.value.trim();
-      if (key) {
-        search.append(key, value);
-      }
-    });
-
-    return search;
-  }
-
-  function minutesUntil(isoValue) {
-    if (!isoValue) {
-      return "n/a";
-    }
-
-    const target = new Date(isoValue);
-    if (Number.isNaN(target.getTime())) {
-      return "n/a";
-    }
-
-    const deltaMs = target.getTime() - Date.now();
-    const mins = Math.max(0, Math.round(deltaMs / 60000));
-    return `${mins} min`;
-  }
-
-  async function callEndpoint(path, queryParams) {
-    const query = queryParams.toString();
-    const url = query ? `${path}?${query}` : path;
-
-    setStatus("Loading");
-    responseText = "Loading...";
-
-    try {
-      const response = await fetch(url);
-      const text = await response.text();
-
-      let payload;
-      try {
-        payload = JSON.parse(text);
-      } catch {
-        payload = { raw: text };
-      }
-
-      responseText = JSON.stringify(payload, null, 2);
-      if (response.ok) {
-        setStatus(`OK ${response.status}`, "ok");
-      } else {
-        setStatus(`Error ${response.status}`, "error");
-      }
-
-      services = Array.isArray(payload?.Services) ? payload.Services.slice(0, 12) : [];
-    } catch (error) {
-      responseText = JSON.stringify(
-        {
-          error: "Request failed",
-          message: error?.message || "Unknown error"
-        },
-        null,
-        2
-      );
-      setStatus("Network Error", "error");
-      services = [];
-    }
-  }
-
-  async function runRequest() {
-    const selected = getSelectedEndpoint();
-    await callEndpoint(selected.path, collectParams());
-  }
-
-  async function runArrival() {
-    if (!nearestStop) {
-      await resolveLocationAndNearestStop();
-      if (!nearestStop) {
-        responseText = JSON.stringify({ error: "Unable to resolve nearest bus stop." }, null, 2);
-        return;
-      }
-    }
-
-    const search = new URLSearchParams();
-    search.append("BusStopCode", nearestStop.code);
-    if (serviceNo.trim()) {
-      search.append("ServiceNo", serviceNo.trim());
-    }
-
-    await callEndpoint("/api/v1/bus-arrival", search);
-  }
-
-  function onEndpointChange() {
-    method = getSelectedEndpoint().method;
-    seedDefaultParams();
-  }
-
   onMount(async () => {
-    await loadOpenApiEndpoints();
-    selectedEndpointIndex = 0;
-    method = getSelectedEndpoint().method;
-    seedDefaultParams();
     await updateMap();
     await resolveLocationAndNearestStop();
+  });
+
+  onDestroy(() => {
+    if (map) {
+      map.remove();
+      map = null;
+    }
   });
 </script>
 
 <svelte:head>
-  <title>Bus SG Control Deck</title>
+  <title>Bus SG Nearby Arrivals</title>
   <link
     rel="stylesheet"
     href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"
@@ -443,106 +337,73 @@
 <main class="app-shell">
   <header class="hero">
     <p class="kicker">Singapore Transit</p>
-    <h1>Bus Control Deck</h1>
-    <p class="subtitle">
-      Live explorer for the bus gateway API at
-      <span>localhost:8067</span>.
-    </p>
+    <h1>Nearby Bus Arrivals</h1>
+    <p class="subtitle">Map-driven view using your current location to detect the nearest bus stop.</p>
   </header>
 
-  <section class="panel query-panel">
-    <div class="panel-header">
-      <h2>Endpoint Explorer</h2>
-      <button class="btn-accent" type="button" on:click={runRequest}>Run Request</button>
-    </div>
-
-    <div class="grid-two">
-      <label>
-        Endpoint
-        <select bind:value={selectedEndpointIndex} on:change={onEndpointChange}>
-          {#each endpointOptions as item, index}
-            <option value={index}>{item.label} ({item.path})</option>
-          {/each}
-        </select>
-      </label>
-      <label>
-        Request Method
-        <input value={method} readonly />
-      </label>
-    </div>
-
-    <div class="params-head">
-      <h3>Query Params</h3>
-      <button class="btn-ghost" type="button" on:click={addParamRow}>Add Param</button>
-    </div>
-
-    <div class="params-list">
-      {#each params as param, index}
-        <div class="param-row">
-          <input
-            class="param-key"
-            placeholder="Key"
-            value={param.key}
-            on:input={(event) => updateParam(index, "key", event.currentTarget.value)}
-          />
-          <input
-            class="param-value"
-            placeholder="Value"
-            value={param.value}
-            on:input={(event) => updateParam(index, "value", event.currentTarget.value)}
-          />
-          <button class="remove-param" type="button" on:click={() => removeParamRow(index)}>
-            Remove
-          </button>
-        </div>
-      {/each}
-    </div>
-  </section>
-
-  <section class="panel quick-panel">
-    <div class="panel-header">
-      <h2>Quick Arrival Check</h2>
-      <button class="btn-accent" type="button" on:click={runArrival}>Get Arrivals</button>
-    </div>
-
-    <div class="location-head">
-      <p class="hint">{locationMessage}</p>
-      <button class="btn-ghost" type="button" on:click={resolveLocationAndNearestStop} disabled={locating}>
-        {locating ? "Locating..." : "Refresh Location"}
+  <section class="panel">
+    <div class="panel-header compact">
+      <div>
+        <h2>Live Map</h2>
+        <p class="hint">{locationMessage}</p>
+      </div>
+      <button class="btn-ghost" type="button" on:click={() => resolveLocationAndNearestStop()} disabled={locating}>
+        {locating ? "Locating..." : "Use Current Location"}
       </button>
     </div>
 
     <div class="map-panel" bind:this={mapContainer}></div>
 
-    <div class="grid-two">
-      <label>
-        Resolved Bus Stop
-        <input value={nearestStop ? `${nearestStop.code} - ${nearestStop.description}` : "Not resolved"} readonly />
-      </label>
-      <label>
-        Service No (optional)
-        <input bind:value={serviceNo} placeholder="e.g. 14" />
-      </label>
+    <div class="stop-meta">
+      <div class="meta-item">
+        <span class="meta-label">Nearest stop</span>
+        <strong>{nearestStop ? `${nearestStop.code} - ${nearestStop.description}` : "Not resolved"}</strong>
+      </div>
+      <div class="meta-item">
+        <span class="meta-label">Road</span>
+        <strong>{nearestStop?.roadName || "-"}</strong>
+      </div>
+      <div class="meta-item">
+        <span class="meta-label">Distance</span>
+        <strong>{nearestStop ? formatDistance(nearestStop.distanceMeters) : "-"}</strong>
+      </div>
     </div>
-    <p class="hint">Uses /api/v1/bus-arrival with DataMall-style query parameters.</p>
   </section>
 
   <section class="panel">
-    <div class="panel-header">
-      <h2>Response</h2>
+    <div class="panel-header compact">
+      <h2>Arrivals</h2>
       <span class={`status-pill ${statusState}`}>{statusText}</span>
     </div>
 
-    <div class={`arrival-board ${services.length > 0 ? "" : "hidden"}`}>
-      {#each services as service}
-        <article class="arrival-card">
-          <h4>Service {service.ServiceNo || "?"}</h4>
-          <p class="arrival-line">Next: {minutesUntil(service?.NextBus?.EstimatedArrival)}</p>
-          <p class="arrival-line">Following: {minutesUntil(service?.NextBus2?.EstimatedArrival)}</p>
-        </article>
-      {/each}
+    <div class="arrivals-actions">
+      <label>
+        Service filter (optional)
+        <input bind:value={serviceNo} placeholder="e.g. 14" />
+      </label>
+      <button class="btn-accent" type="button" on:click={runArrival} disabled={loadingArrivals || locating}>
+        {loadingArrivals ? "Loading..." : "Refresh Arrivals"}
+      </button>
     </div>
 
-    <pre class="response">{responseText}</pre>
+    {#if services.length > 0}
+      <div class="arrival-board">
+        {#each services as service}
+          <article class="arrival-card">
+            <h3>Service {service.ServiceNo || "?"}</h3>
+            <p class="arrival-line">Next: {minutesUntil(service?.NextBus?.EstimatedArrival)}</p>
+            <p class="arrival-line">Following: {minutesUntil(service?.NextBus2?.EstimatedArrival)}</p>
+            <p class="arrival-line">Third: {minutesUntil(service?.NextBus3?.EstimatedArrival)}</p>
+          </article>
+        {/each}
+      </div>
+    {:else}
+      <p class="hint">No arrivals loaded yet. Tap "Use Current Location" then "Refresh Arrivals".</p>
+    {/if}
+
+    <details class="raw-response">
+      <summary>Raw response</summary>
+      <pre class="response">{responseText}</pre>
+    </details>
   </section>
 </main>
