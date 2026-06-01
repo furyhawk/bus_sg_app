@@ -442,7 +442,7 @@
   <header class="hero">
     <p class="kicker">Singapore Transit</p>
     <h1>Nearby Bus Arrivals</h1>
-    <p class="subtitle">Map-driven view using your current location to detect the nearest bus stop.</p>
+    <p class="subtitle">Map-first view using your location and taps to find nearby stops and live arrivals.</p>
   </header>
 
   <section class="panel">
@@ -451,12 +451,12 @@
         <h2>Live Map</h2>
         <p class="hint">{locationMessage}</p>
       </div>
-      <button class="btn-ghost" type="button" on:click={() => resolveLocationAndNearestStop()} disabled={locating}>
-        {locating ? "Locating..." : "Use Current Location"}
-      </button>
+      <div class="map-actions">
+        <button class="btn-ghost" type="button" on:click={() => resolveLocationAndNearestStop()} disabled={locating}>
+          {locating ? "Locating..." : "Use Current Location"}
+        </button>
+      </div>
     </div>
-
-    <p class="map-hint">Tip: tap anywhere on the map to check the nearest stop and refresh arrivals around that point.</p>
 
     <div class="map-wrap">
       <div class="map-panel" bind:this={mapContainer}></div>

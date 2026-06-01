@@ -40,13 +40,13 @@ body {
 
 .app-shell {
   width: min(1100px, calc(100% - 2rem));
-  margin: 2rem auto 3rem;
+  margin: 1.05rem auto 2.2rem;
   position: relative;
   z-index: 1;
 }
 
 .hero {
-  margin-bottom: 1rem;
+  margin-bottom: 0.4rem;
   animation: rise 420ms ease-out both;
 }
 
@@ -74,6 +74,8 @@ h1 {
 .subtitle {
   max-width: 60ch;
   color: var(--ink-soft);
+  margin: 0.25rem 0 0;
+  font-size: 0.93rem;
 }
 
 .panel {
@@ -97,6 +99,12 @@ h1 {
 
 .panel-header.compact {
   margin-bottom: 0.65rem;
+}
+
+.map-actions {
+  display: flex;
+  gap: 0.45rem;
+  align-items: center;
 }
 
 .arrivals-head-actions {
@@ -193,16 +201,20 @@ button:hover {
 .map-wrap {
   position: relative;
   margin-bottom: 0.8rem;
+  isolation: isolate;
 }
 
 .map-wrap .map-panel {
   margin-bottom: 0;
+  position: relative;
+  z-index: 1;
 }
 
 .map-arrivals-overlay {
   position: absolute;
   right: 0.7rem;
   bottom: 0.7rem;
+  z-index: 900;
   width: min(320px, calc(100% - 1.4rem));
   padding: 0.62rem 0.72rem;
   background: rgba(31, 26, 19, 0.84);
@@ -278,7 +290,7 @@ button:hover {
 }
 
 .map-hint {
-  margin: 0 0 0.8rem;
+  margin: 0 0 0.55rem;
   color: var(--ink-soft);
   font-size: 0.86rem;
 }
@@ -444,8 +456,25 @@ button:hover {
 
   .app-shell {
     width: min(1100px, calc(100% - 1rem));
-    margin-top: 1rem;
+    margin-top: 0.45rem;
     margin-bottom: 2rem;
+  }
+
+  .hero {
+    margin-bottom: 0.2rem;
+  }
+
+  .kicker {
+    font-size: 0.66rem;
+    letter-spacing: 0.13em;
+  }
+
+  h1 {
+    font-size: clamp(1.45rem, 7vw, 1.9rem);
+  }
+
+  .subtitle {
+    display: none;
   }
 
   .stop-meta,
@@ -456,6 +485,12 @@ button:hover {
 
   .panel-header {
     flex-wrap: wrap;
+  }
+
+  .map-actions {
+    width: 100%;
+    display: grid;
+    grid-template-columns: 1fr;
   }
 
   .location-head {
