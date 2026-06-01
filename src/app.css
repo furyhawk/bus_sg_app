@@ -175,6 +175,93 @@ button:hover {
   margin-bottom: 0.8rem;
 }
 
+.map-wrap {
+  position: relative;
+  margin-bottom: 0.8rem;
+}
+
+.map-wrap .map-panel {
+  margin-bottom: 0;
+}
+
+.map-arrivals-overlay {
+  position: absolute;
+  right: 0.7rem;
+  bottom: 0.7rem;
+  width: min(320px, calc(100% - 1.4rem));
+  padding: 0.62rem 0.72rem;
+  background: rgba(31, 26, 19, 0.84);
+  color: #f8edd5;
+  border: 1px solid rgba(251, 219, 180, 0.35);
+  border-radius: 12px;
+  backdrop-filter: blur(4px);
+  box-shadow: 0 10px 20px rgba(17, 13, 9, 0.25);
+}
+
+.map-arrivals-overlay h3 {
+  font-size: 0.94rem;
+  margin-bottom: 0.2rem;
+}
+
+.map-overlay-stop {
+  margin: 0 0 0.45rem;
+  font-size: 0.78rem;
+  color: #e8cfab;
+}
+
+.map-arrivals-list {
+  margin: 0;
+  padding: 0;
+  list-style: none;
+  display: grid;
+  gap: 0.34rem;
+}
+
+.map-arrivals-list li {
+  display: grid;
+  grid-template-columns: auto auto;
+  justify-content: space-between;
+  gap: 0.15rem 0.6rem;
+  align-items: baseline;
+  font-size: 0.83rem;
+}
+
+.map-arrivals-list li strong {
+  color: #ffd79f;
+}
+
+.map-arrivals-list li small {
+  grid-column: 1 / -1;
+  color: #f1ddbe;
+  font-size: 0.74rem;
+}
+
+.map-overlay-empty {
+  margin: 0;
+  font-size: 0.8rem;
+  color: #ead8bb;
+}
+
+.map-overlay-fallback-list {
+  margin: 0.45rem 0 0;
+  padding: 0;
+  list-style: none;
+  display: grid;
+  gap: 0.3rem;
+}
+
+.map-overlay-fallback-list li {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 0.5rem;
+  font-size: 0.8rem;
+}
+
+.map-overlay-fallback-list li strong {
+  color: #ffd79f;
+}
+
 .map-hint {
   margin: 0 0 0.8rem;
   color: var(--ink-soft);
@@ -359,6 +446,13 @@ button:hover {
 
   .map-panel {
     height: min(50vh, 340px);
+  }
+
+  .map-arrivals-overlay {
+    right: 0.5rem;
+    left: 0.5rem;
+    width: auto;
+    bottom: 0.5rem;
   }
 
   .panel {
