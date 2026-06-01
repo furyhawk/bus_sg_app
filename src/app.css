@@ -101,6 +101,13 @@ h1 {
   margin-bottom: 0.65rem;
 }
 
+.map-title-row {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  margin-bottom: 0.2rem;
+}
+
 .map-actions {
   display: flex;
   gap: 0.45rem;
@@ -532,6 +539,12 @@ button:hover {
     width: 100%;
     display: grid;
     grid-template-columns: 1fr;
+  }
+
+  .map-title-row .map-actions {
+    width: auto;
+    display: flex;
+    grid-template-columns: none;
   }
 
   .location-head {
