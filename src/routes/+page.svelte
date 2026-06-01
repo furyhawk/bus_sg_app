@@ -440,8 +440,10 @@
 <div class="bg-grid"></div>
 <main class="app-shell">
   <header class="hero">
-    <p class="kicker">Singapore Transit</p>
-    <h1>Nearby Bus Arrivals</h1>
+    <div class="hero-title-row">
+      <h1>Nearby Bus Arrivals</h1>
+      <p class="kicker">Singapore Transit</p>
+    </div>
     <p class="subtitle">Map-first view using your location and taps to find nearby stops and live arrivals.</p>
   </header>
 

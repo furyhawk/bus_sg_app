@@ -50,12 +50,19 @@ body {
   animation: rise 420ms ease-out both;
 }
 
+.hero-title-row {
+  display: flex;
+  align-items: baseline;
+  gap: 0.75rem;
+}
+
 .kicker {
   margin: 0;
   text-transform: uppercase;
   letter-spacing: 0.17em;
   font-size: 0.76rem;
   color: var(--accent-dark);
+  white-space: nowrap;
 }
 
 h1,
@@ -69,6 +76,10 @@ h1 {
   font-size: clamp(2rem, 5vw, 3.6rem);
   line-height: 1;
   margin-top: 0.5rem;
+}
+
+.hero-title-row h1 {
+  margin-top: 0;
 }
 
 .subtitle {
@@ -519,7 +530,11 @@ button:hover {
 
   h1 {
     font-size: clamp(1.3rem, 5.0vw, 1.75rem);
-    margin-top: 0.25rem;
+    margin-top: 0;
+  }
+
+  .hero-title-row {
+    gap: 0.45rem;
   }
 
   .subtitle {
