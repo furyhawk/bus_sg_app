@@ -1,0 +1,11 @@
+services:
+  app:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    image: bus-sg-app:latest
+    ports:
+      - "${APP_PORT:-3000}:3000"
+    environment:
+      API_ORIGIN: "${API_ORIGIN:-http://host.containers.internal:8067}"
+    restart: unless-stopped

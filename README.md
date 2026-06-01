@@ -39,6 +39,51 @@ bun run preview
 
 You can also use `bun run start` to run preview mode.
 
+## Containerized run (Docker and Podman)
+
+This project includes:
+
+- `Dockerfile`
+- `compose.yaml`
+- `Makefile` wrapper for Docker Compose and Podman Compose
+
+By default, the container expects your gateway at:
+
+- `http://host.containers.internal:8067`
+
+If you use Docker Desktop on macOS and need Docker host mapping instead, set:
+
+- `API_ORIGIN=http://host.docker.internal:8067`
+
+### Start with Docker Compose
+
+```bash
+make up ENGINE=docker
+```
+
+### Start with Podman Compose
+
+```bash
+make up ENGINE=podman
+```
+
+### Useful commands
+
+```bash
+make build ENGINE=docker
+make logs ENGINE=docker
+make ps ENGINE=docker
+make down ENGINE=docker
+```
+
+You can replace `ENGINE=docker` with `ENGINE=podman` in all commands.
+
+### Optional environment overrides
+
+```bash
+APP_PORT=3001 API_ORIGIN=http://host.docker.internal:8067 make up ENGINE=docker
+```
+
 ## Screenshot
 
 ![Nearby Bus Arrivals UI](docs/screenshots/bus-ui.jpeg)
