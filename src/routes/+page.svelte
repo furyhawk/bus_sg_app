@@ -10,7 +10,7 @@
   let serviceNo = "";
   let locating = false;
   let loadingArrivals = false;
-  let mobileSheetOpen = true;
+  let mobileSheetOpen = false;
 
   let userLocation = null;
   let selectedStop = null;
@@ -452,8 +452,27 @@
         <p class="hint">{locationMessage}</p>
       </div>
       <div class="map-actions">
-        <button class="btn-ghost" type="button" on:click={() => resolveLocationAndNearestStop()} disabled={locating}>
-          {locating ? "Locating..." : "Use Current Location"}
+        <button
+          class="btn-ghost icon-btn"
+          type="button"
+          aria-label={locating ? "Resolving current location" : "Use current location"}
+          title={locating ? "Locating" : "Use Current Location"}
+          on:click={() => resolveLocationAndNearestStop()}
+          disabled={locating}
+        >
+          {#if locating}
+            <svg class="spin" viewBox="0 0 24 24" width="16" height="16" aria-hidden="true">
+              <circle cx="12" cy="12" r="9" fill="none" stroke="currentColor" stroke-opacity="0.25" stroke-width="2" />
+              <path d="M12 3a9 9 0 0 1 9 9" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" />
+            </svg>
+          {:else}
+            <svg viewBox="0 0 24 24" width="16" height="16" aria-hidden="true">
+              <circle cx="12" cy="12" r="2" fill="currentColor" />
+              <circle cx="12" cy="12" r="7" fill="none" stroke="currentColor" stroke-width="1.8" />
+              <path d="M12 2v3m0 14v3M2 12h3m14 0h3" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" />
+            </svg>
+          {/if}
+          <span class="visually-hidden">{locating ? "Locating..." : "Use Current Location"}</span>
         </button>
       </div>
     </div>

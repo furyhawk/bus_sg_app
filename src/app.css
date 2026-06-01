@@ -162,6 +162,36 @@ button:hover {
   filter: brightness(1.02);
 }
 
+.icon-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 40px;
+  min-width: 40px;
+  height: 40px;
+  padding: 0;
+}
+
+.icon-btn svg {
+  display: block;
+}
+
+.spin {
+  animation: spin 900ms linear infinite;
+}
+
+.visually-hidden {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  margin: -1px;
+  padding: 0;
+  overflow: hidden;
+  clip: rect(0, 0, 0, 0);
+  border: 0;
+  white-space: nowrap;
+}
+
 .btn-accent {
   color: #fff;
   background: linear-gradient(135deg, #d25f1f, #a94411);
@@ -449,19 +479,29 @@ button:hover {
   }
 }
 
+@keyframes spin {
+  from {
+    transform: rotate(0deg);
+  }
+
+  to {
+    transform: rotate(360deg);
+  }
+}
+
 @media (max-width: 760px) {
   body {
-    padding-bottom: 16.5rem;
+    padding-bottom: 12.2rem;
   }
 
   .app-shell {
     width: min(1100px, calc(100% - 1rem));
-    margin-top: 0.45rem;
-    margin-bottom: 2rem;
+    margin-top: 0.3rem;
+    margin-bottom: 1.2rem;
   }
 
   .hero {
-    margin-bottom: 0.2rem;
+    margin-bottom: 0.1rem;
   }
 
   .kicker {
@@ -470,7 +510,8 @@ button:hover {
   }
 
   h1 {
-    font-size: clamp(1.45rem, 7vw, 1.9rem);
+    font-size: clamp(1.3rem, 6.8vw, 1.75rem);
+    margin-top: 0.25rem;
   }
 
   .subtitle {
@@ -499,7 +540,7 @@ button:hover {
   }
 
   .map-panel {
-    height: min(50vh, 340px);
+    height: min(43vh, 290px);
   }
 
   .map-arrivals-overlay {
@@ -507,10 +548,67 @@ button:hover {
     left: 0.5rem;
     width: auto;
     bottom: 0.5rem;
+    padding: 0.48rem 0.58rem;
   }
 
   .panel {
-    padding: 0.85rem;
+    padding: 0.68rem;
+    margin-top: 0.58rem;
+    border-radius: 14px;
+  }
+
+  .hint,
+  .map-hint,
+  .meta-label {
+    font-size: 0.78rem;
+  }
+
+  .map-overlay-stop,
+  .map-overlay-empty,
+  .map-arrivals-list li,
+  .map-overlay-fallback-list li {
+    font-size: 0.74rem;
+  }
+
+  .meta-item {
+    padding: 0.5rem 0.58rem;
+  }
+
+  .stop-choice {
+    min-height: 42px;
+    padding: 0.5rem 0.58rem;
+    font-size: 0.83rem;
+  }
+
+  .arrivals-actions {
+    gap: 0.5rem;
+    margin-bottom: 0.55rem;
+  }
+
+  .arrival-board {
+    gap: 0.45rem;
+    margin-bottom: 0.55rem;
+  }
+
+  .arrival-card {
+    border-radius: 12px;
+    padding: 0.6rem;
+  }
+
+  .arrival-card h3 {
+    font-size: 1rem;
+  }
+
+  .arrival-line {
+    margin-top: 0.22rem;
+    font-size: 0.83rem;
+  }
+
+  .response {
+    min-height: 120px;
+    max-height: 260px;
+    font-size: 0.76rem;
+    padding: 0.62rem;
   }
 
   .arrivals-panel {
@@ -520,10 +618,10 @@ button:hover {
     bottom: 0.5rem;
     z-index: 14;
     margin-top: 0;
-    border-radius: 18px;
+    border-radius: 14px;
     background: rgba(255, 251, 243, 0.96);
     box-shadow: 0 16px 36px rgba(54, 39, 12, 0.22);
-    max-height: min(68vh, 520px);
+    max-height: min(60vh, 420px);
     overflow: hidden;
     transition: transform 220ms ease, max-height 220ms ease;
   }
@@ -562,13 +660,13 @@ button:hover {
   }
 
   .arrivals-panel .sheet-content {
-    max-height: calc(min(68vh, 520px) - 92px);
+    max-height: calc(min(60vh, 420px) - 78px);
     overflow: auto;
-    padding-bottom: 0.25rem;
+    padding-bottom: 0.15rem;
   }
 
   .arrivals-panel.sheet-collapsed {
-    max-height: 76px;
+    max-height: 62px;
   }
 
   .arrivals-panel.sheet-collapsed .panel-header,
@@ -583,11 +681,26 @@ button:hover {
   }
 
   .arrivals-panel.sheet-collapsed .sheet-grabber {
-    padding: 0.52rem 0;
+    padding: 0.4rem 0;
   }
 
   .btn-accent,
   .btn-ghost {
-    min-height: 44px;
+    min-height: 38px;
+    padding: 0.48rem 0.65rem;
+    font-size: 0.86rem;
+  }
+
+  .icon-btn {
+    width: 38px;
+    min-width: 38px;
+    height: 38px;
+    padding: 0;
+  }
+
+  input,
+  select {
+    padding: 0.5rem 0.6rem;
+    font-size: 0.86rem;
   }
 }
