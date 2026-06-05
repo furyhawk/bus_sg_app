@@ -13,7 +13,9 @@
     "cap:sync": "cap sync",
     "cap:open:android": "cap open android",
     "cap:open:ios": "cap open ios",
-    "mobile:build": "bun run build && cap sync"
+    "mobile:build": "bun run build && cap sync",
+    "android:dev": "node scripts/cap-config.mjs dev && vite build --mode development && cap sync",
+    "android:prod": "node scripts/cap-config.mjs prod && vite build --mode production && cap sync"
   },
   "devDependencies": {
     "@capacitor/cli": "^8.3.4",
