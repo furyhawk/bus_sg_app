@@ -259,6 +259,10 @@ button:hover {
   z-index: 1;
 }
 
+.selected-stop-marker {
+  filter: drop-shadow(0 8px 14px rgba(84, 42, 11, 0.28));
+}
+
 .map-arrivals-overlay {
   position: absolute;
   right: 0.7rem;
