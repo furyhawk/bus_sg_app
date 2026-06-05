@@ -1,6 +1,24 @@
 <script>
   import { onDestroy, onMount } from "svelte";
 
+  const RAW_API_BASE = import.meta.env.VITE_API_BASE ?? "";
+
+  function resolveApiBase() {
+    const base = RAW_API_BASE.trim().replace(/\/+$/, "");
+    if (!base) {
+      return "";
+    }
+
+    const platform = globalThis.Capacitor?.getPlatform?.();
+    if (platform === "android") {
+      return base.replace(/^http:\/\/(localhost|127\.0\.0\.1)(?=[:/]|$)/, "http://10.0.2.2");
+    }
+
+    return base;
+  }
+
+  const API_BASE = resolveApiBase();
+
   let statusText = "Idle";
   let statusState = "";
   let responseText = "No request yet.";
@@ -121,7 +139,7 @@
 
     while (true) {
       const query = new URLSearchParams({ $top: String(pageSize), $skip: String(skip) });
-      const response = await fetch(`/api/v1/bus-stops?${query.toString()}`);
+      const response = await fetch(`${API_BASE}/api/v1/bus-stops?${query.toString()}`);
       if (!response.ok) {
         throw new Error(`Unable to load bus stops (${response.status})`);
       }
@@ -340,7 +358,7 @@
     setStatus("Loading", "");
     responseText = "Loading...";
 
-    const url = `/api/v1/bus-arrival?${query.toString()}`;
+    const url = `${API_BASE}/api/v1/bus-arrival?${query.toString()}`;
     const response = await fetch(url);
     const text = await response.text();
 
