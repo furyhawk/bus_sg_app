@@ -22,6 +22,7 @@
   let mapLayer;
   let userMarker;
   let stopMarker;
+  let selectedStopMarkerIcon;
   let linkLine;
   let nearbyStopMarkers = [];
   let isMapClickPicking = false;
@@ -203,6 +204,22 @@
     mapLayer.addTo(map);
   }
 
+  function getSelectedStopMarkerIcon(leaflet) {
+    if (selectedStopMarkerIcon) {
+      return selectedStopMarkerIcon;
+    }
+
+    selectedStopMarkerIcon = leaflet.icon({
+      iconUrl: "/favicon.svg",
+      iconSize: [32, 32],
+      iconAnchor: [16, 16],
+      popupAnchor: [0, -16],
+      className: "selected-stop-marker"
+    });
+
+    return selectedStopMarkerIcon;
+  }
+
   async function updateMap() {
     if (!mapContainer) {
       return;
@@ -254,9 +271,15 @@
       const stopLatLng = [selectedStop.lat, selectedStop.lon];
       const stopLabel = `${selectedStop.description} (${selectedStop.code})`;
       if (!stopMarker) {
-        stopMarker = leaflet.marker(stopLatLng, { title: stopLabel }).addTo(map);
+        stopMarker = leaflet
+          .marker(stopLatLng, {
+            title: stopLabel,
+            icon: getSelectedStopMarkerIcon(leaflet)
+          })
+          .addTo(map);
       } else {
         stopMarker.setLatLng(stopLatLng);
+        stopMarker.setIcon(getSelectedStopMarkerIcon(leaflet));
       }
       stopMarker.bindPopup(buildStopPopup(selectedStop));
     }
