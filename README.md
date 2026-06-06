@@ -74,6 +74,43 @@ bunx cap add android
 bunx cap add ios
 ```
 
+### Android Studio dev/prod configuration
+
+This project includes two Android build modes that prepare web assets and Capacitor config before opening/running in Android Studio.
+
+Development mode (emulator/local API):
+
+```bash
+npm run android:dev
+```
+
+- Uses Vite `--mode development` (`.env.development`)
+- Uses `androidScheme: http` to avoid mixed-content issues with local HTTP APIs
+- Intended for Android emulator + local gateway (typically `http://10.0.2.2:8067`)
+
+Production mode (deployed API):
+
+```bash
+npm run android:prod
+```
+
+- Uses Vite `--mode production` (`.env.production`)
+- Uses `androidScheme: https`
+- Intended for deployed HTTPS API endpoints
+
+Then open and run in Android Studio:
+
+```bash
+npm run cap:open:android
+```
+
+Environment files used by these modes:
+
+- `.env.development` -> `VITE_API_BASE` for emulator/local development
+- `.env.production` -> `VITE_API_BASE` for production
+
+Capacitor native HTTP patch is enabled in `capacitor.config.json` via `plugins.CapacitorHttp.enabled = true` to avoid WebView CORS issues on Android.
+
 ## Containerized run (Docker and Podman)
 
 This project includes:
