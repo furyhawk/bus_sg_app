@@ -2,6 +2,7 @@
   import { onDestroy, onMount } from "svelte";
 
   const RAW_API_BASE = import.meta.env.VITE_API_BASE ?? "";
+  const ARRIVAL_REFRESH_MS = 30000;
 
   function resolveApiBase() {
     const base = RAW_API_BASE.trim().replace(/\/+$/, "");
@@ -44,6 +45,7 @@
   let linkLine;
   let nearbyStopMarkers = [];
   let isMapClickPicking = false;
+  let arrivalRefreshTimer;
 
   $: mapArrivals =
     selectedStop && arrivalsStopCode === selectedStop.code
@@ -409,6 +411,14 @@
     }
   }
 
+  async function refreshArrivalsIfReady() {
+    if (!selectedStop || loadingArrivals || locating) {
+      return;
+    }
+
+    await runArrival();
+  }
+
   async function selectBusStop(stop, loadArrivals = false) {
     selectedStop = stop;
     locationMessage = `Selected stop: ${stop.description} (${stop.code})`;
@@ -456,11 +466,17 @@
   }
 
   onMount(async () => {
+    arrivalRefreshTimer = setInterval(() => {
+      refreshArrivalsIfReady();
+    }, ARRIVAL_REFRESH_MS);
+
     await updateMap();
     await resolveLocationAndNearestStop();
   });
 
   onDestroy(() => {
+    clearInterval(arrivalRefreshTimer);
+
     if (map) {
       map.remove();
       map = null;
