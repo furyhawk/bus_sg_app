@@ -375,7 +375,13 @@
     }
 
     responseText = JSON.stringify(payload, null, 2);
-    services = Array.isArray(payload?.Services) ? payload.Services.slice(0, 12) : [];
+    services = Array.isArray(payload?.Services)
+      ? payload.Services.slice(0, 12).sort((a, b) => {
+          const aTime = new Date(a?.NextBus?.EstimatedArrival).getTime();
+          const bTime = new Date(b?.NextBus?.EstimatedArrival).getTime();
+          return (isNaN(aTime) ? Infinity : aTime) - (isNaN(bTime) ? Infinity : bTime);
+        })
+      : [];
 
     if (!response.ok) {
       throw new Error(`Arrival request failed (${response.status})`);
