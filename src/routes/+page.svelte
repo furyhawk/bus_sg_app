@@ -550,10 +550,6 @@
 
       <div class="stop-meta compact">
         <div class="meta-item">
-          <span class="meta-label">Stop</span>
-          <strong>{selectedStop ? selectedStop.code : "-"}</strong>
-        </div>
-        <div class="meta-item">
           <span class="meta-label">Road</span>
           <strong>{selectedStop?.roadName || "-"}</strong>
         </div>

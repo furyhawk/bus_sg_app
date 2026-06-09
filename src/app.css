@@ -348,17 +348,21 @@ button:hover {
 
 .stop-meta {
   display: grid;
-  grid-template-columns: repeat(3, minmax(0, 1fr));
+  grid-template-columns: repeat(2, minmax(0, 1fr));
   gap: 0.5rem;
 }
 
+.stop-meta.compact {
+  gap: 0.4rem;
+}
+
 .stop-meta.compact .meta-item {
-  padding: 0.35rem 0.5rem;
+  padding: 0.3rem 0.45rem;
   border-radius: 10px;
 }
 
 .stop-meta.compact .meta-item strong {
-  font-size: 0.82rem;
+  font-size: 0.8rem;
   overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;
