@@ -261,6 +261,7 @@ button:hover {
 }
 
 .map-arrivals-overlay {
+  display: none;
   position: absolute;
   right: 1rem;
   bottom: 1rem;
@@ -608,29 +609,40 @@ button:hover {
   }
 
   .controls-panel {
-    padding: 0.45rem 0.55rem;
+    padding: 0.35rem 0.5rem;
   }
 
   .controls-panel .panel-header.compact {
-    margin-bottom: 0.2rem;
+    margin-bottom: 0.15rem;
   }
 
   .location-head {
     flex-direction: row;
-    align-items: flex-start;
-    gap: 0.4rem;
+    align-items: center;
+    gap: 0.35rem;
+    margin-bottom: 0.2rem;
   }
 
   .location-head .hint {
-    font-size: 0.76rem;
+    font-size: 0.72rem;
+  }
+
+  .stop-meta.compact {
+    gap: 0.25rem;
   }
 
   .stop-meta.compact .meta-item {
-    padding: 0.2rem 0.35rem;
+    padding: 0.15rem 0.3rem;
+    border-radius: 8px;
+  }
+
+  .stop-meta.compact .meta-label {
+    font-size: 0.58rem;
+    margin-bottom: 0;
   }
 
   .stop-meta.compact .meta-item strong {
-    font-size: 0.75rem;
+    font-size: 0.72rem;
   }
 
   .stop-meta,
@@ -639,15 +651,7 @@ button:hover {
   }
 
   .nearby-panel {
-    flex: none;
-    max-height: none;
-    overflow: visible;
-    padding: 0.45rem 0.55rem;
-  }
-
-  .nearby-panel.collapsed {
-    opacity: 0;
-    transform: translateY(-4px);
+    display: none;
   }
 
   .nearby-list {
@@ -656,11 +660,16 @@ button:hover {
   }
 
   .map-arrivals-overlay {
+    display: block;
     right: 0.5rem;
     left: 0.5rem;
     width: auto;
     bottom: 4.8rem;
     padding: 0.42rem 0.52rem;
+  }
+
+  .leaflet-control-zoom {
+    display: none;
   }
 
   .panel {
@@ -723,6 +732,7 @@ button:hover {
   }
 
   .arrivals-panel {
+    display: none;
     position: fixed;
     left: 0.5rem;
     right: 0.5rem;
