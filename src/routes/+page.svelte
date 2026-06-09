@@ -30,6 +30,7 @@
   let locating = false;
   let loadingArrivals = false;
   let mobileSheetOpen = false;
+  let stopsVisible = true;
 
   let userLocation = null;
   let selectedStop = null;
@@ -501,13 +502,95 @@
 </div>
 
 <main class="app-shell">
-  <header class="hero">
-    <div class="hero-title-row">
-      <h1>Nearby Bus Arrivals</h1>
-      <p class="kicker">Singapore Transit</p>
-    </div>
-    <p class="subtitle">Map-first view using your location and taps to find nearby stops and live arrivals.</p>
-  </header>
+  <div class="sidebar-left">
+    <header class="hero">
+      <div class="hero-title-row">
+        <h1>Nearby Bus Arrivals</h1>
+        <p class="kicker">Singapore Transit</p>
+      </div>
+      <p class="subtitle">Map-first view using your location and taps to find nearby stops and live arrivals.</p>
+    </header>
+
+    <section class="panel controls-panel">
+      <div class="panel-header compact">
+        <div>
+          <div class="location-head">
+            <button
+              class="btn-ghost icon-btn"
+              type="button"
+              aria-label={locating ? "Resolving current location" : "Use current location"}
+              title={locating ? "Locating" : "Use Current Location"}
+              on:click={() => resolveLocationAndNearestStop()}
+              disabled={locating}
+            >
+              {#if locating}
+                <svg class="spin" viewBox="0 0 24 24" width="16" height="16" aria-hidden="true">
+                  <circle cx="12" cy="12" r="9" fill="none" stroke="currentColor" stroke-opacity="0.25" stroke-width="2" />
+                  <path d="M12 3a9 9 0 0 1 9 9" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" />
+                </svg>
+              {:else}
+                <svg viewBox="0 0 24 24" width="16" height="16" aria-hidden="true">
+                  <circle cx="12" cy="12" r="2" fill="currentColor" />
+                  <circle cx="12" cy="12" r="7" fill="none" stroke="currentColor" stroke-width="1.8" />
+                  <path d="M12 2v3m0 14v3M2 12h3m14 0h3" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" />
+                </svg>
+              {/if}
+              <span class="visually-hidden">{locating ? "Locating..." : "Use Current Location"}</span>
+            </button>
+            <p class="hint">{locationMessage}</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="stop-meta compact">
+        <div class="meta-item">
+          <span class="meta-label">Stop</span>
+          <strong>{selectedStop ? selectedStop.code : "-"}</strong>
+        </div>
+        <div class="meta-item">
+          <span class="meta-label">Road</span>
+          <strong>{selectedStop?.roadName || "-"}</strong>
+        </div>
+        <div class="meta-item">
+          <span class="meta-label">Dist</span>
+          <strong>{selectedStop ? formatDistance(selectedStop.distanceMeters) : "-"}</strong>
+        </div>
+      </div>
+    </section>
+
+    <section class="panel nearby-panel" class:collapsed={!stopsVisible} aria-hidden={!stopsVisible}>
+      <div class="nearby-header">
+        <p class="meta-label">Nearby stops</p>
+        <button
+          class="toggle-btn"
+          type="button"
+          aria-label={stopsVisible ? "Hide nearby stops" : "Show nearby stops"}
+          on:click={() => (stopsVisible = !stopsVisible)}
+        >
+          {stopsVisible ? "Hide" : "Show"}
+        </button>
+      </div>
+
+      {#if stopsVisible}
+        {#if nearbyStops.length > 0}
+          <div class="nearby-list">
+            {#each nearbyStops as stop}
+              <button
+                class={`stop-choice ${selectedStop?.code === stop.code ? "active" : ""}`}
+                type="button"
+                on:click={() => selectBusStop(stop, true)}
+              >
+                <span>{stop.code} - {stop.description}</span>
+                <small>{formatDistance(stop.distanceMeters)}</small>
+              </button>
+            {/each}
+          </div>
+        {:else}
+          <p class="hint">No nearby stops loaded yet.</p>
+        {/if}
+      {/if}
+    </section>
+  </div>
 
   <aside class="map-arrivals-overlay" aria-live="polite">
     <h3>Arrivals</h3>
@@ -545,73 +628,6 @@
       <p class="map-overlay-empty">Waiting for location to load stops...</p>
     {/if}
   </aside>
-
-  <section class="panel controls-panel">
-    <div class="panel-header compact">
-      <div>
-        <div class="location-head">
-          <button
-            class="btn-ghost icon-btn"
-            type="button"
-            aria-label={locating ? "Resolving current location" : "Use current location"}
-            title={locating ? "Locating" : "Use Current Location"}
-            on:click={() => resolveLocationAndNearestStop()}
-            disabled={locating}
-          >
-            {#if locating}
-              <svg class="spin" viewBox="0 0 24 24" width="16" height="16" aria-hidden="true">
-                <circle cx="12" cy="12" r="9" fill="none" stroke="currentColor" stroke-opacity="0.25" stroke-width="2" />
-                <path d="M12 3a9 9 0 0 1 9 9" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" />
-              </svg>
-            {:else}
-              <svg viewBox="0 0 24 24" width="16" height="16" aria-hidden="true">
-                <circle cx="12" cy="12" r="2" fill="currentColor" />
-                <circle cx="12" cy="12" r="7" fill="none" stroke="currentColor" stroke-width="1.8" />
-                <path d="M12 2v3m0 14v3M2 12h3m14 0h3" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" />
-              </svg>
-            {/if}
-            <span class="visually-hidden">{locating ? "Locating..." : "Use Current Location"}</span>
-          </button>
-          <p class="hint">{locationMessage}</p>
-        </div>
-      </div>
-    </div>
-
-    <div class="stop-meta">
-      <div class="meta-item">
-        <span class="meta-label">Selected stop</span>
-        <strong>{selectedStop ? `${selectedStop.code} - ${selectedStop.description}` : "Not resolved"}</strong>
-      </div>
-      <div class="meta-item">
-        <span class="meta-label">Road</span>
-        <strong>{selectedStop?.roadName || "-"}</strong>
-      </div>
-      <div class="meta-item">
-        <span class="meta-label">Distance</span>
-        <strong>{selectedStop ? formatDistance(selectedStop.distanceMeters) : "-"}</strong>
-      </div>
-    </div>
-
-    <div class="nearby-stops">
-      <p class="meta-label">Nearby stops</p>
-      {#if nearbyStops.length > 0}
-        <div class="nearby-list">
-          {#each nearbyStops as stop}
-            <button
-              class={`stop-choice ${selectedStop?.code === stop.code ? "active" : ""}`}
-              type="button"
-              on:click={() => selectBusStop(stop, true)}
-            >
-              <span>{stop.code} - {stop.description}</span>
-              <small>{formatDistance(stop.distanceMeters)}</small>
-            </button>
-          {/each}
-        </div>
-      {:else}
-        <p class="hint">No nearby stops loaded yet.</p>
-      {/if}
-    </div>
-  </section>
 
   <section class="panel arrivals-panel" class:sheet-collapsed={!mobileSheetOpen}>
     <button

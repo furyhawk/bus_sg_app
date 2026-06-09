@@ -33,16 +33,28 @@ body {
   z-index: 2;
   pointer-events: none;
   overflow: hidden;
+  padding: 1rem;
+  display: flex;
+  gap: 0.75rem;
+  align-items: flex-start;
 }
 
 .app-shell > * {
   pointer-events: auto;
 }
 
+.sidebar-left {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+  width: 290px;
+  flex-shrink: 0;
+  max-height: 100%;
+  position: relative;
+  z-index: 1;
+}
+
 .hero {
-  position: absolute;
-  top: 1rem;
-  left: 1rem;
   margin: 0;
   display: inline-flex;
   flex-direction: column;
@@ -54,7 +66,6 @@ body {
   padding: 0.55rem 1rem;
   box-shadow: 0 8px 24px rgba(54, 39, 12, 0.18);
   animation: rise 420ms ease-out both;
-  z-index: 3;
 }
 
 .hero-title-row {
@@ -114,19 +125,6 @@ h1 {
 
 .panel-header.compact {
   margin-bottom: 0.65rem;
-}
-
-.map-title-row {
-  display: flex;
-  align-items: center;
-  gap: 0.5rem;
-  margin-bottom: 0.2rem;
-}
-
-.map-actions {
-  display: flex;
-  gap: 0.45rem;
-  align-items: center;
 }
 
 .arrivals-head-actions {
@@ -233,8 +231,8 @@ button:hover {
   display: flex;
   justify-content: flex-start;
   align-items: center;
-  gap: 0.7rem;
-  margin-bottom: 0.7rem;
+  gap: 0.6rem;
+  margin-bottom: 0.4rem;
 }
 
 .location-head .hint {
@@ -350,7 +348,20 @@ button:hover {
 .stop-meta {
   display: grid;
   grid-template-columns: repeat(3, minmax(0, 1fr));
-  gap: 0.7rem;
+  gap: 0.5rem;
+}
+
+.stop-meta.compact .meta-item {
+  padding: 0.35rem 0.5rem;
+  border-radius: 10px;
+}
+
+.stop-meta.compact .meta-item strong {
+  font-size: 0.82rem;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  display: block;
 }
 
 .meta-item {
@@ -362,41 +373,94 @@ button:hover {
 
 .meta-label {
   display: block;
-  font-size: 0.75rem;
+  font-size: 0.68rem;
   text-transform: uppercase;
   letter-spacing: 0.08em;
   color: #846950;
-  margin-bottom: 0.2rem;
+  margin-bottom: 0.1rem;
 }
 
-.nearby-stops {
-  margin-top: 0.85rem;
+/* --- Nearby panel (separate, hideable) --- */
+
+.nearby-panel {
+  margin: 0;
+  padding: 0.65rem 0.75rem;
+  flex: 1;
+  min-height: 0;
+  overflow-y: auto;
+  overscroll-behavior: contain;
+  transition: opacity 180ms ease, transform 180ms ease;
+}
+
+.nearby-panel.collapsed {
+  opacity: 0;
+  transform: translateY(-8px);
+  pointer-events: none;
+}
+
+.nearby-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 0.5rem;
+  margin-bottom: 0.5rem;
+}
+
+.nearby-header .meta-label {
+  margin-bottom: 0;
+}
+
+.toggle-btn {
+  background: transparent;
+  color: var(--accent);
+  font-size: 0.78rem;
+  font-weight: 600;
+  padding: 0.2rem 0.5rem;
+  border-radius: 8px;
+  min-height: 0;
+  border: 1px solid transparent;
+}
+
+.toggle-btn:hover {
+  border-color: var(--line);
+  background: rgba(210, 95, 31, 0.06);
+}
+
+.nearby-panel::-webkit-scrollbar {
+  width: 4px;
+}
+
+.nearby-panel::-webkit-scrollbar-thumb {
+  background: var(--line);
+  border-radius: 999px;
 }
 
 .nearby-list {
   display: grid;
   grid-template-columns: repeat(2, minmax(0, 1fr));
-  gap: 0.55rem;
+  gap: 0.4rem;
 }
 
 .stop-choice {
   display: flex;
   justify-content: space-between;
   align-items: center;
-  gap: 0.6rem;
+  gap: 0.5rem;
   text-align: left;
   width: 100%;
   border: 1px solid #d7c3a6;
   background: #fff8ea;
   color: #3f3325;
-  padding: 0.62rem 0.72rem;
-  min-height: 48px;
+  padding: 0.48rem 0.6rem;
+  min-height: 40px;
+  font-size: 0.82rem;
 }
 
 .stop-choice small {
   color: #846950;
   font-weight: 600;
   white-space: nowrap;
+  font-size: 0.75rem;
 }
 
 .stop-choice.active {
@@ -513,81 +577,82 @@ button:hover {
 
 @media (max-width: 760px) {
   .app-shell {
-    position: fixed;
-    inset: 0;
-    z-index: 2;
-    pointer-events: none;
-    overflow: hidden;
+    flex-direction: column;
+    padding: 0.5rem;
+    gap: 0.4rem;
   }
 
-  .app-shell > * {
-    pointer-events: auto;
+  .sidebar-left {
+    width: auto;
+    flex: none;
+    max-height: none;
+    gap: 0.35rem;
   }
 
   .hero {
-    top: 0.5rem;
-    left: 0.5rem;
-    padding: 0.4rem 0.75rem;
+    padding: 0.35rem 0.65rem;
     border-radius: 12px;
     gap: 0;
   }
 
   .hero h1 {
-    font-size: clamp(1rem, 4.5vw, 1.35rem);
+    font-size: clamp(0.95rem, 4.5vw, 1.25rem);
   }
 
   .kicker {
-    font-size: 0.6rem;
+    font-size: 0.55rem;
   }
 
   .hero-title-row {
-    gap: 0.4rem;
+    gap: 0.35rem;
   }
 
   .controls-panel {
-    position: absolute;
-    top: 3.6rem;
-    left: 0.5rem;
-    right: 0.5rem;
-    bottom: auto;
-    width: auto;
-    max-height: 40vh;
-    overflow-y: auto;
-    padding: 0.55rem 0.7rem;
-    border-radius: 14px;
-    overscroll-behavior: contain;
+    padding: 0.45rem 0.55rem;
   }
 
   .controls-panel .panel-header.compact {
-    margin-bottom: 0.35rem;
+    margin-bottom: 0.2rem;
   }
 
   .location-head {
     flex-direction: row;
     align-items: flex-start;
-    gap: 0.5rem;
-  }
-
-  .location-head .hint {
-    font-size: 0.78rem;
-  }
-
-  .stop-meta,
-  .arrivals-actions,
-  .nearby-list {
-    grid-template-columns: 1fr;
-  }
-
-  .stop-meta {
     gap: 0.4rem;
   }
 
-  .nearby-stops {
-    margin-top: 0.55rem;
+  .location-head .hint {
+    font-size: 0.76rem;
+  }
+
+  .stop-meta.compact .meta-item {
+    padding: 0.2rem 0.35rem;
+  }
+
+  .stop-meta.compact .meta-item strong {
+    font-size: 0.75rem;
+  }
+
+  .stop-meta,
+  .arrivals-actions {
+    grid-template-columns: 1fr;
+  }
+
+  .nearby-panel {
+    flex: none;
+    max-height: none;
+    overflow: visible;
+    padding: 0.45rem 0.55rem;
+  }
+
+  .nearby-panel.collapsed {
+    opacity: 0;
+    transform: translateY(-4px);
   }
 
   .nearby-list {
-    gap: 0.35rem;
+    grid-template-columns: 1fr;
+    gap: 0.3rem;
   }
 
   .map-arrivals-overlay {
@@ -621,9 +686,9 @@ button:hover {
   }
 
   .stop-choice {
-    min-height: 40px;
-    padding: 0.45rem 0.55rem;
-    font-size: 0.8rem;
+    min-height: 38px;
+    padding: 0.4rem 0.5rem;
+    font-size: 0.78rem;
   }
 
   .arrivals-actions {
@@ -752,23 +817,12 @@ button:hover {
 }
 
 .controls-panel {
-  position: absolute;
-  left: 1rem;
-  top: 5rem;
-  bottom: 1rem;
-  width: 340px;
-  overflow-y: auto;
   margin: 0;
-  overscroll-behavior: contain;
+  padding: 0.65rem 0.75rem;
 }
 
-.controls-panel::-webkit-scrollbar {
-  width: 5px;
-}
-
-.controls-panel::-webkit-scrollbar-thumb {
-  background: var(--line);
-  border-radius: 999px;
+.controls-panel .panel-header.compact {
+  margin-bottom: 0.35rem;
 }
 
 .arrivals-panel {
@@ -776,7 +830,7 @@ button:hover {
   right: 1rem;
   top: 1rem;
   bottom: 1rem;
-  width: 360px;
+  width: 350px;
   overflow-y: auto;
   margin: 0;
   overscroll-behavior: contain;
