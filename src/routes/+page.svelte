@@ -430,7 +430,7 @@
 
   async function selectBusStop(stop, loadArrivals = false) {
     selectedStop = stop;
-    locationMessage = `Selected stop: ${stop.description} (${stop.code})`;
+    locationMessage = `Selected stop: <strong>${escapeHtml(stop.description)}</strong> (${stop.code})`;
     await updateMap();
     if (loadArrivals) {
       await runArrival();
@@ -444,7 +444,7 @@
       throw new Error("No nearby bus stop found.");
     }
 
-    locationMessage = `Nearest stop found: ${selectedStop.description} (${selectedStop.code}). Tap another stop in the list or map.`;
+    locationMessage = `Nearest stop found: <strong>${escapeHtml(selectedStop.description)}</strong> (${selectedStop.code}). Tap another stop in the list or map.`;
     await updateMap();
     setStatus("Location Ready", "ok");
 
@@ -543,7 +543,7 @@
               {/if}
               <span class="visually-hidden">{locating ? "Locating..." : "Use Current Location"}</span>
             </button>
-            <p class="hint">{locationMessage}</p>
+            <p class="hint">{@html locationMessage}</p>
           </div>
         </div>
       </div>
