@@ -21,46 +21,53 @@ body {
   margin: 0;
   font-family: "Space Grotesk", sans-serif;
   color: var(--ink);
-  min-height: 100vh;
-  background: radial-gradient(circle at 15% 15%, #fff4dc 0%, transparent 35%),
-    radial-gradient(circle at 82% 0%, #ffd3b6 0%, transparent 32%),
-    linear-gradient(155deg, var(--bg-0), var(--bg-1));
-  overflow-x: hidden;
-}
-
-.bg-grid {
-  position: fixed;
-  inset: 0;
-  pointer-events: none;
-  opacity: 0.2;
-  background-image: linear-gradient(to right, #a88f63 1px, transparent 1px),
-    linear-gradient(to bottom, #a88f63 1px, transparent 1px);
-  background-size: 36px 36px;
+  height: 100vh;
+  height: 100dvh;
+  overflow: hidden;
+  background: #1e1b16;
 }
 
 .app-shell {
-  width: min(1100px, calc(100% - 2rem));
-  margin: 1.05rem auto 2.2rem;
-  position: relative;
-  z-index: 1;
+  position: fixed;
+  inset: 0;
+  z-index: 2;
+  pointer-events: none;
+  overflow: hidden;
+}
+
+.app-shell > * {
+  pointer-events: auto;
 }
 
 .hero {
-  margin-bottom: 0.4rem;
+  position: absolute;
+  top: 1rem;
+  left: 1rem;
+  margin: 0;
+  display: inline-flex;
+  flex-direction: column;
+  gap: 0.15rem;
+  background: rgba(255, 251, 243, 0.88);
+  backdrop-filter: blur(10px);
+  border: 1px solid var(--line);
+  border-radius: 14px;
+  padding: 0.55rem 1rem;
+  box-shadow: 0 8px 24px rgba(54, 39, 12, 0.18);
   animation: rise 420ms ease-out both;
+  z-index: 3;
 }
 
 .hero-title-row {
   display: flex;
   align-items: baseline;
-  gap: 0.75rem;
+  gap: 0.6rem;
 }
 
 .kicker {
   margin: 0;
   text-transform: uppercase;
   letter-spacing: 0.17em;
-  font-size: 0.76rem;
+  font-size: 0.7rem;
   color: var(--accent-dark);
   white-space: nowrap;
 }
@@ -80,23 +87,20 @@ h1 {
 
 .hero-title-row h1 {
   margin-top: 0;
+  font-size: clamp(1.15rem, 2.2vw, 1.55rem);
 }
 
 .subtitle {
-  max-width: 60ch;
-  color: var(--ink-soft);
-  margin: 0.25rem 0 0;
-  font-size: 0.81rem;
+  display: none;
 }
 
 .panel {
-  background: var(--card);
+  background: rgba(255, 251, 243, 0.88);
   border: 1px solid var(--line);
   border-radius: 16px;
-  box-shadow: var(--shadow);
-  padding: 1rem;
-  margin-top: 1rem;
-  backdrop-filter: blur(4px);
+  box-shadow: 0 8px 28px rgba(54, 39, 12, 0.18);
+  padding: 0.85rem 1rem;
+  backdrop-filter: blur(10px);
   animation: rise 520ms ease-out both;
 }
 
@@ -238,25 +242,20 @@ button:hover {
   flex: 1;
 }
 
-.map-panel {
-  width: 100%;
-  height: 580px;
-  border: 1px solid var(--line);
-  border-radius: 14px;
-  overflow: hidden;
-  margin-bottom: 0.8rem;
-}
-
 .map-wrap {
-  position: relative;
-  margin-bottom: 0.8rem;
+  position: fixed;
+  inset: 0;
+  z-index: 0;
   isolation: isolate;
 }
 
-.map-wrap .map-panel {
-  margin-bottom: 0;
-  position: relative;
-  z-index: 1;
+.map-panel {
+  width: 100%;
+  height: 100vh;
+  height: 100dvh;
+  border: none;
+  border-radius: 0;
+  overflow: hidden;
 }
 
 .selected-stop-marker {
@@ -265,17 +264,17 @@ button:hover {
 
 .map-arrivals-overlay {
   position: absolute;
-  right: 0.7rem;
-  bottom: 0.7rem;
-  z-index: 900;
-  width: min(320px, calc(100% - 1.4rem));
+  right: 1rem;
+  bottom: 1rem;
+  z-index: 3;
+  width: min(300px, calc(100% - 2rem));
   padding: 0.62rem 0.72rem;
-  background: rgba(31, 26, 19, 0.84);
+  background: rgba(31, 26, 19, 0.82);
   color: #f8edd5;
-  border: 1px solid rgba(251, 219, 180, 0.35);
+  border: 1px solid rgba(251, 219, 180, 0.3);
   border-radius: 12px;
-  backdrop-filter: blur(4px);
-  box-shadow: 0 10px 20px rgba(17, 13, 9, 0.25);
+  backdrop-filter: blur(6px);
+  box-shadow: 0 10px 24px rgba(17, 13, 9, 0.3);
 }
 
 .map-arrivals-overlay h3 {
@@ -513,36 +512,64 @@ button:hover {
 }
 
 @media (max-width: 760px) {
-  body {
-    padding-bottom: 12.2rem;
+  .app-shell {
+    position: fixed;
+    inset: 0;
+    z-index: 2;
+    pointer-events: none;
+    overflow: hidden;
   }
 
-  .app-shell {
-    width: min(1100px, calc(100% - 1rem));
-    margin-top: 0.3rem;
-    margin-bottom: 1.2rem;
+  .app-shell > * {
+    pointer-events: auto;
   }
 
   .hero {
-    margin-bottom: 0.1rem;
+    top: 0.5rem;
+    left: 0.5rem;
+    padding: 0.4rem 0.75rem;
+    border-radius: 12px;
+    gap: 0;
+  }
+
+  .hero h1 {
+    font-size: clamp(1rem, 4.5vw, 1.35rem);
   }
 
   .kicker {
-    font-size: 0.66rem;
-    letter-spacing: 0.13em;
-  }
-
-  h1 {
-    font-size: clamp(1.3rem, 5.0vw, 1.75rem);
-    margin-top: 0;
+    font-size: 0.6rem;
   }
 
   .hero-title-row {
-    gap: 0.45rem;
+    gap: 0.4rem;
   }
 
-  .subtitle {
-    display: none;
+  .controls-panel {
+    position: absolute;
+    top: 3.6rem;
+    left: 0.5rem;
+    right: 0.5rem;
+    bottom: auto;
+    width: auto;
+    max-height: 40vh;
+    overflow-y: auto;
+    padding: 0.55rem 0.7rem;
+    border-radius: 14px;
+    overscroll-behavior: contain;
+  }
+
+  .controls-panel .panel-header.compact {
+    margin-bottom: 0.35rem;
+  }
+
+  .location-head {
+    flex-direction: row;
+    align-items: flex-start;
+    gap: 0.5rem;
+  }
+
+  .location-head .hint {
+    font-size: 0.78rem;
   }
 
   .stop-meta,
@@ -551,43 +578,28 @@ button:hover {
     grid-template-columns: 1fr;
   }
 
-  .panel-header {
-    flex-wrap: wrap;
+  .stop-meta {
+    gap: 0.4rem;
   }
 
-  .map-actions {
-    width: 100%;
-    display: grid;
-    grid-template-columns: 1fr;
+  .nearby-stops {
+    margin-top: 0.55rem;
   }
 
-  .map-title-row .map-actions {
-    width: auto;
-    display: flex;
-    grid-template-columns: none;
-  }
-
-  .location-head {
-    flex-direction: row;
-    align-items: flex-start;
-    gap: 0.55rem;
-  }
-
-  .map-panel {
-    height: clamp(320px, 66dvh, 580px);
+  .nearby-list {
+    gap: 0.35rem;
   }
 
   .map-arrivals-overlay {
     right: 0.5rem;
     left: 0.5rem;
     width: auto;
-    bottom: 0.5rem;
-    padding: 0.48rem 0.58rem;
+    bottom: 4.8rem;
+    padding: 0.42rem 0.52rem;
   }
 
   .panel {
     padding: 0.68rem;
-    margin-top: 0.58rem;
     border-radius: 14px;
   }
 
@@ -601,17 +613,17 @@ button:hover {
   .map-overlay-empty,
   .map-arrivals-list li,
   .map-overlay-fallback-list li {
-    font-size: 0.74rem;
+    font-size: 0.72rem;
   }
 
   .meta-item {
-    padding: 0.5rem 0.58rem;
+    padding: 0.4rem 0.5rem;
   }
 
   .stop-choice {
-    min-height: 42px;
-    padding: 0.5rem 0.58rem;
-    font-size: 0.83rem;
+    min-height: 40px;
+    padding: 0.45rem 0.55rem;
+    font-size: 0.8rem;
   }
 
   .arrivals-actions {
@@ -737,4 +749,50 @@ button:hover {
     padding: 0.5rem 0.6rem;
     font-size: 0.86rem;
   }
+}
+
+.controls-panel {
+  position: absolute;
+  left: 1rem;
+  top: 5rem;
+  bottom: 1rem;
+  width: 340px;
+  overflow-y: auto;
+  margin: 0;
+  overscroll-behavior: contain;
+}
+
+.controls-panel::-webkit-scrollbar {
+  width: 5px;
+}
+
+.controls-panel::-webkit-scrollbar-thumb {
+  background: var(--line);
+  border-radius: 999px;
+}
+
+.arrivals-panel {
+  position: absolute;
+  right: 1rem;
+  top: 1rem;
+  bottom: 1rem;
+  width: 360px;
+  overflow-y: auto;
+  margin: 0;
+  overscroll-behavior: contain;
+}
+
+.arrivals-panel::-webkit-scrollbar {
+  width: 5px;
+}
+
+.arrivals-panel::-webkit-scrollbar-thumb {
+  background: var(--line);
+  border-radius: 999px;
+}
+
+.map-hint {
+  margin: 0 0 0.55rem;
+  color: var(--ink-soft);
+  font-size: 0.86rem;
 }

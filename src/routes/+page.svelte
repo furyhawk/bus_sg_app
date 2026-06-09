@@ -249,9 +249,11 @@
 
     if (!map) {
       map = leaflet.map(mapContainer, {
-        zoomControl: true,
+        zoomControl: false,
         scrollWheelZoom: true
       });
+
+      leaflet.control.zoom({ position: "bottomleft" }).addTo(map);
 
       map.on("click", async (event) => {
         if (isMapClickPicking) {
@@ -494,7 +496,10 @@
   />
 </svelte:head>
 
-<div class="bg-grid"></div>
+<div class="map-wrap">
+  <div class="map-panel" bind:this={mapContainer}></div>
+</div>
+
 <main class="app-shell">
   <header class="hero">
     <div class="hero-title-row">
@@ -504,7 +509,44 @@
     <p class="subtitle">Map-first view using your location and taps to find nearby stops and live arrivals.</p>
   </header>
 
-  <section class="panel">
+  <aside class="map-arrivals-overlay" aria-live="polite">
+    <h3>Arrivals</h3>
+    <p class="map-overlay-stop">
+      {#if selectedStop}
+        {selectedStop.code} - {selectedStop.description}
+      {:else}
+        No stop selected
+      {/if}
+    </p>
+
+    {#if loadingArrivals}
+      <p class="map-overlay-empty">Loading arrivals...</p>
+    {:else if mapArrivals.length > 0}
+      <ul class="map-arrivals-list">
+        {#each mapArrivals as item}
+          <li>
+            <strong>{item.serviceNo}</strong>
+            <span>{item.next}</span>
+            <small>Then {item.following}</small>
+          </li>
+        {/each}
+      </ul>
+    {:else if overlayNearbyStops.length > 0}
+      <p class="map-overlay-empty">Nearby stops</p>
+      <ul class="map-overlay-fallback-list">
+        {#each overlayNearbyStops as stop}
+          <li>
+            <strong>{stop.code}</strong>
+            <span>{formatDistance(stop.distanceMeters)}</span>
+          </li>
+        {/each}
+      </ul>
+    {:else}
+      <p class="map-overlay-empty">Waiting for location to load stops...</p>
+    {/if}
+  </aside>
+
+  <section class="panel controls-panel">
     <div class="panel-header compact">
       <div>
         <div class="location-head">
@@ -533,47 +575,6 @@
           <p class="hint">{locationMessage}</p>
         </div>
       </div>
-    </div>
-
-    <div class="map-wrap">
-      <div class="map-panel" bind:this={mapContainer}></div>
-
-      <aside class="map-arrivals-overlay" aria-live="polite">
-        <h3>Arrivals</h3>
-        <p class="map-overlay-stop">
-          {#if selectedStop}
-            {selectedStop.code} - {selectedStop.description}
-          {:else}
-            No stop selected
-          {/if}
-        </p>
-
-        {#if loadingArrivals}
-          <p class="map-overlay-empty">Loading arrivals...</p>
-        {:else if mapArrivals.length > 0}
-          <ul class="map-arrivals-list">
-            {#each mapArrivals as item}
-              <li>
-                <strong>{item.serviceNo}</strong>
-                <span>{item.next}</span>
-                <small>Then {item.following}</small>
-              </li>
-            {/each}
-          </ul>
-        {:else if overlayNearbyStops.length > 0}
-          <p class="map-overlay-empty">Nearby stops</p>
-          <ul class="map-overlay-fallback-list">
-            {#each overlayNearbyStops as stop}
-              <li>
-                <strong>{stop.code}</strong>
-                <span>{formatDistance(stop.distanceMeters)}</span>
-              </li>
-            {/each}
-          </ul>
-        {:else}
-          <p class="map-overlay-empty">Waiting for location to load stops...</p>
-        {/if}
-      </aside>
     </div>
 
     <div class="stop-meta">
