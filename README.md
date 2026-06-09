@@ -6,6 +6,11 @@ A lightweight bus transport web app that uses the gateway OpenAPI contract at:
 
 The frontend is built with SvelteKit. It dynamically loads transport endpoints from the OpenAPI spec and calls them through a SvelteKit server hook proxy.
 
+## Screenshot
+
+![Nearby Bus Arrivals UI](docs/screenshots/bus-ui-v2.png)
+![Nearby Bus Arrivals UI Mobile](docs/screenshots/bus-ui-mobile.png)
+
 ## Stack
 
 - SvelteKit + Vite + Svelte 5
@@ -155,10 +160,6 @@ You can replace `ENGINE=docker` with `ENGINE=podman` in all commands.
 ```bash
 APP_PORT=3001 API_ORIGIN=http://host.docker.internal:8067 make up ENGINE=docker
 ```
-
-## Screenshot
-
-![Nearby Bus Arrivals UI](docs/screenshots/bus-ui.jpeg)
 
 ## Project structure
 
