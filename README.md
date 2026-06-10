@@ -18,7 +18,7 @@ The frontend is built with SvelteKit. It dynamically loads transport endpoints f
 
 ## Run
 
-1. Ensure your API gateway is running at http://localhost:8067.
+1. Ensure your API gateway is running at http://localhost:8067. Refer to https://github.com/furyhawk/lta_datamall_api.git
 2. Install dependencies:
 
 ```bash
