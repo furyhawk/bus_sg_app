@@ -6,6 +6,12 @@ A lightweight bus transport web app that uses the gateway OpenAPI contract at:
 
 The frontend is built with SvelteKit. It dynamically loads transport endpoints from the OpenAPI spec and calls them through a SvelteKit server hook proxy.
 
+## Live demo
+
+Access the app at https://bus.furyhawk.lol/ or scan the QR code below:
+
+[![QR code to bus.furyhawk.lol](docs/screenshots/bus-qr-code.png)](https://bus.furyhawk.lol/)
+
 ## Screenshot
 
 ![Nearby Bus Arrivals UI](docs/screenshots/bus-ui-v2.png)
