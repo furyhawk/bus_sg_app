@@ -18,16 +18,17 @@
     "android:prod": "node scripts/cap-config.mjs prod && vite build --mode production && cap sync"
   },
   "devDependencies": {
-    "@capacitor/cli": "^8.3.4",
-    "@sveltejs/adapter-static": "^3.0.10",
-    "@sveltejs/kit": "^2.61.1",
-    "svelte": "^5.56.0",
-    "vite": "^7.0.0"
+    "@capacitor/cli": "^8.6.2",
+    "@sveltejs/adapter-static": "^3.0.11",
+    "@sveltejs/kit": "^2.70.4",
+    "svelte": "^5.57.3",
+    "vite": "^7.3.8"
   },
   "dependencies": {
-    "@capacitor/android": "^8.3.4",
-    "@capacitor/core": "^8.3.4",
-    "@capacitor/ios": "^8.3.4",
+    "@capacitor/android": "^8.6.2",
+    "@capacitor/core": "^8.6.2",
+    "@capacitor/geolocation": "^8.2.4",
+    "@capacitor/ios": "^8.6.2",
     "leaflet": "^1.9.4"
   }
 }

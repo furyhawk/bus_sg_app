@@ -1,5 +1,7 @@
 <script>
   import { onDestroy, onMount } from "svelte";
+  import { Capacitor } from "@capacitor/core";
+  import { Geolocation } from "@capacitor/geolocation";
 
   const RAW_API_BASE = import.meta.env.VITE_API_BASE ?? "";
   const ARRIVAL_REFRESH_MS = 30000;
@@ -36,6 +38,8 @@
   let selectedStop = null;
   let nearbyStops = [];
   let locationMessage = "Allow location access to find your nearest bus stop.";
+  let showIosLocationSettingsPrompt = false;
+  let iosLocationPromptFeedback = "";
 
   let mapContainer;
   let map;
@@ -207,10 +211,71 @@
 
       navigator.geolocation.getCurrentPosition(resolve, reject, {
         enableHighAccuracy: true,
-        timeout: 10000,
+        timeout: 20000,
         maximumAge: 60000
       });
     });
+  }
+
+  function normalizeLocationError(error) {
+    const message = String(error?.message || "");
+    if (error?.code === 1 || /permission|denied|not authorized/i.test(message)) {
+      return "Location permission denied. Enable it in iPhone Settings > Bus SG App > Location.";
+    }
+    if (error?.code === 3 || /timeout/i.test(message)) {
+      return "Location request timed out. Move to an open area and try again.";
+    }
+    return message || "Unable to resolve current location.";
+  }
+
+  function isNativeIos() {
+    return Capacitor?.isNativePlatform?.() && Capacitor?.getPlatform?.() === "ios";
+  }
+
+  function isPermissionDeniedError(error) {
+    const message = String(error?.message || "");
+    return error?.code === 1 || /permission|denied|not authorized/i.test(message);
+  }
+
+  async function openIosSettings() {
+    if (!isNativeIos()) {
+      return;
+    }
+
+    iosLocationPromptFeedback = "";
+
+    try {
+      const appPlugin = globalThis?.Capacitor?.Plugins?.App;
+      if (typeof appPlugin?.openSettings === "function") {
+        await appPlugin.openSettings();
+        iosLocationPromptFeedback = "Settings opened. Enable location access, then return and tap Retry.";
+        return;
+      }
+
+      globalThis.location.href = "app-settings:";
+      iosLocationPromptFeedback = "Opening Settings... If nothing happens, open iPhone Settings > Bus SG App > Location.";
+    } catch {
+      iosLocationPromptFeedback = "Open iPhone Settings > Bus SG App > Location, then return and tap Retry.";
+    }
+  }
+
+  async function getCurrentPosition() {
+    if (Capacitor?.isNativePlatform?.()) {
+      const permissionStatus = await Geolocation.requestPermissions();
+      if (permissionStatus?.location !== "granted") {
+        const permissionError = new Error("Location permission denied.");
+        permissionError.code = 1;
+        throw permissionError;
+      }
+
+      return Geolocation.getCurrentPosition({
+        enableHighAccuracy: true,
+        timeout: 20000,
+        maximumAge: 60000
+      });
+    }
+
+    return getBrowserPosition();
   }
 
   function ensureMapLayer(leaflet) {
@@ -458,16 +523,21 @@
     locationMessage = "Resolving your location...";
 
     try {
-      const position = await getBrowserPosition();
+      const position = await getCurrentPosition();
       userLocation = {
         lat: position.coords.latitude,
         lon: position.coords.longitude
       };
+      showIosLocationSettingsPrompt = false;
+      iosLocationPromptFeedback = "";
 
       locationMessage = "Finding nearby bus stops...";
       await resolveNearbyFromCurrentPoint(loadArrivals);
     } catch (error) {
-      locationMessage = error?.message || "Unable to resolve current location.";
+      locationMessage = normalizeLocationError(error);
+      if (isNativeIos() && isPermissionDeniedError(error)) {
+        showIosLocationSettingsPrompt = true;
+      }
       setStatus("Location Error", "error");
     } finally {
       locating = false;
@@ -545,6 +615,19 @@
             </button>
             <p class="hint">{@html locationMessage}</p>
           </div>
+          {#if showIosLocationSettingsPrompt}
+            <div class="ios-location-panel" role="alert" aria-live="polite">
+              <p class="ios-location-title">Location access is blocked on iPhone.</p>
+              <p class="ios-location-text">Open Settings and choose "While Using the App", then return and retry.</p>
+              <div class="ios-location-actions">
+                <button class="btn-ghost" type="button" on:click={openIosSettings}>Open Settings</button>
+                <button class="btn-accent" type="button" on:click={() => resolveLocationAndNearestStop()}>Retry</button>
+              </div>
+              {#if iosLocationPromptFeedback}
+                <p class="ios-location-feedback">{iosLocationPromptFeedback}</p>
+              {/if}
+            </div>
+          {/if}
         </div>
       </div>
 
